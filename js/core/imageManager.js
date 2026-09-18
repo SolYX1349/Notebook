@@ -1,7 +1,7 @@
 export class ImageManager {
     constructor(notebookManager) {
         this.nbManager = notebookManager;
-        this.container = null; // Se asume que será #imageLayer
+        this.container = null;
         this.activeWidget = null;
         this.isDragging = false;
         this.isResizing = false;
@@ -18,7 +18,6 @@ export class ImageManager {
         document.addEventListener('mousemove', this.onMouseMove.bind(this));
         document.addEventListener('mouseup', this.onMouseUp.bind(this));
         
-        // Deseleccionar al hacer clic fuera
         document.addEventListener('mousedown', (e) => {
             if (!e.target.closest('.image-widget') && !e.target.closest('.tool-btn')) {
                 this.deselectAll();
@@ -42,8 +41,8 @@ export class ImageManager {
             x: 100,
             y: 100,
             width: 300,
-            height: 'auto', // Auto keeps aspect ratio initially
-            mode: 'contain' // 'contain' for scale, 'cover' for crop-like behavior
+            height: 'auto',
+            mode: 'contain'
         };
         
         const nb = this.nbManager.getActiveNotebook();
@@ -77,7 +76,6 @@ export class ImageManager {
             <div class="resize-handle"></div>
         `;
 
-        // Eventos
         widget.addEventListener('mousedown', (e) => {
             if (e.target.closest('.widget-controls') || e.target.classList.contains('resize-handle')) return;
             this.startDrag(e, widget);
@@ -104,7 +102,6 @@ export class ImageManager {
             imgEl.style.objectFit = newMode;
             this.updateImageData(imgData.id, { mode: newMode });
             
-            // Icon update
             toggleBtn.innerHTML = newMode === 'cover' ? '<i class="ph ph-arrows-out"></i>' : '<i class="ph ph-crop"></i>';
         });
 
@@ -112,22 +109,20 @@ export class ImageManager {
     }
 
     startDrag(e, widget) {
-        if (this.isReadOnly) return; // No permitir interacción si es de solo lectura
+        if (this.isReadOnly) return;
         this.deselectAll();
         widget.classList.add('active');
         this.activeWidget = widget;
         this.isDragging = true;
         
         const rect = widget.getBoundingClientRect();
-        const containerRect = this.container.getBoundingClientRect();
         
-        // Offset relative to the widget's top-left corner
         this.dragOffset.x = e.clientX - rect.left;
         this.dragOffset.y = e.clientY - rect.top;
     }
 
     startResize(e, widget) {
-        if (this.isReadOnly) return; // No permitir interacción si es de solo lectura
+        if (this.isReadOnly) return;
         this.deselectAll();
         widget.classList.add('active');
         this.activeWidget = widget;
@@ -142,7 +137,6 @@ export class ImageManager {
             let newX = e.clientX - containerRect.left - this.dragOffset.x;
             let newY = e.clientY - containerRect.top - this.dragOffset.y;
             
-            // Limitar dentro del marco de recuadros (25px de margen)
             const margin = 25;
             const maxX = containerRect.width - margin - widgetRect.width;
             const maxY = containerRect.height - margin - widgetRect.height;
@@ -163,7 +157,6 @@ export class ImageManager {
             let newWidth = (e.clientX - containerRect.left) - currentX;
             let newHeight = (e.clientY - containerRect.top) - currentY;
             
-            // Limitar crecimiento para que no se salga del margen
             const margin = 25;
             const maxWidth = containerRect.width - margin - currentX;
             const maxHeight = containerRect.height - margin - currentY;
@@ -178,7 +171,6 @@ export class ImageManager {
 
     onMouseUp(e) {
         if ((this.isDragging || this.isResizing) && this.activeWidget) {
-            // Guardar el estado
             this.updateImageData(this.activeWidget.id, {
                 x: parseInt(this.activeWidget.style.left),
                 y: parseInt(this.activeWidget.style.top),

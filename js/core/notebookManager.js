@@ -3,10 +3,9 @@ export class NotebookManager {
         this.notebooks = [];
         this.activeNotebookId = null;
         this.uiController = null;
-        this.syncFileHandle = null; // Guardará la referencia al archivo en la PC
+        this.syncFileHandle = null;
         this.autoSaveInterval = null;
 
-        // Cargar libretas desde localStorage si existen, o crear una por defecto
         this.loadNotebooks();
     }
 
@@ -23,7 +22,6 @@ export class NotebookManager {
         if (stored) {
             this.notebooks = JSON.parse(stored);
 
-            // Migrate old notebooks to support pagination
             this.notebooks.forEach(nb => {
                 if (!nb.pages || nb.pages.length === 0) {
                     nb.pages = [{
@@ -32,7 +30,6 @@ export class NotebookManager {
                         pageImages: nb.pageImages || [],
                         pageNotes: nb.pageNotes || []
                     }];
-                    // Clean up old root properties if desired, but not strictly necessary
                 } else {
                     nb.pages.forEach(p => {
                         if (!p.pageNotes) p.pageNotes = [];
@@ -43,10 +40,8 @@ export class NotebookManager {
                 }
             });
 
-            // Restaurar libreta manual si no existe
             this.createManualNotebook();
 
-            // Eliminar protección de solo lectura para la libreta antigua "My Notebook" si existe
             const oldDefault = this.notebooks.find(n => n.name === 'My Notebook' && n.isReadOnly);
             if (oldDefault) {
                 oldDefault.isReadOnly = false;
@@ -111,7 +106,6 @@ export class NotebookManager {
             return existingManual;
         }
 
-        // Libreta por defecto: Manual de Uso
         const manual = this.createNotebook('MANUAL', '#0b5394', true);
         manual.isReadOnly = true;
         manual.titleColor = '#ffffff';
@@ -128,7 +122,6 @@ export class NotebookManager {
         return manual;
     }
 
-
     saveNotebooks() {
         try {
             const notebooksToSave = this.notebooks.filter(n => !n.isReadOnly);
@@ -143,41 +136,27 @@ export class NotebookManager {
 
     async exportDatabaseToPC() {
         try {
-            // 1. Verificar compatibilidad
             if (!window.showDirectoryPicker) {
                 alert("Tu navegador no soporta la función de guardar carpetas. Por favor, intenta usar Chrome o Edge.");
                 return;
             }
 
-            // 2. Llamar al selector de directorios solicitando permisos de escritura
-            // Esto ahora se activa directamente por el clic en el botón del modal, evitando bloqueos de seguridad.
             const directoryHandle = await window.showDirectoryPicker({
                 id: 'vr-notebook-save',
                 mode: 'readwrite',
                 startIn: 'documents'
             });
 
-            // Crear o abrir la carpeta "vr-notebook-database"
             const vrFolderHandle = await directoryHandle.getDirectoryHandle('vr-notebook-database', { create: true });
-
-            // Crear el archivo principal de la base de datos
             const fileHandle = await vrFolderHandle.getFileHandle('notebooks.json', { create: true });
 
-            // Guardar la referencia al archivo para el autoguardado silencioso
             this.syncFileHandle = fileHandle;
-
-            // Iniciar el temporizador de autoguardado si no está iniciado
             this.startAutoSaveToPC();
 
-            // 3. Abrir el stream de escritura
             const writableStream = await fileHandle.createWritable();
-
-            // 4. Escribir los datos
             const notebooksToSave = this.notebooks.filter(n => !n.isReadOnly);
             const contenido = JSON.stringify(notebooksToSave, null, 2);
             await writableStream.write(contenido);
-
-            // 5. Cerrar el stream
             await writableStream.close();
 
             alert("Libretas guardadas exitosamente en la carpeta 'vr-notebook-database'.\n\n¡Autoguardado activado! Tus apuntes se sincronizarán en la PC cada 30 segundos mientras no cierres la página.");
@@ -196,7 +175,6 @@ export class NotebookManager {
             clearInterval(this.autoSaveInterval);
         }
 
-        // Ejecutar cada 30 segundos (30000 milisegundos)
         this.autoSaveInterval = setInterval(async () => {
             if (this.syncFileHandle) {
                 try {
@@ -222,7 +200,6 @@ export class NotebookManager {
                 return;
             }
 
-            // Llamar al selector de archivos (sólo permite .json)
             const [fileHandle] = await window.showOpenFilePicker({
                 types: [{
                     description: 'Base de datos de VR Notebook',
@@ -236,19 +213,16 @@ export class NotebookManager {
             const file = await fileHandle.getFile();
             const contenido = await file.text();
 
-            // Analizar y cargar los datos
             const importedNotebooks = JSON.parse(contenido);
 
             if (Array.isArray(importedNotebooks) && importedNotebooks.length > 0) {
                 this.notebooks = importedNotebooks;
                 this.activeNotebookId = this.notebooks[0].id;
-                this.saveNotebooks(); // Guardar en el almacenamiento local
+                this.saveNotebooks();
 
-                // Actualizar la interfaz
                 if (this.uiController) {
                     this.uiController.renderNotebookList(this.notebooks, this.activeNotebookId);
                     this.uiController.updateCoverView(this.getActiveNotebook());
-                    // Cerramos la libreta por si estaba abierta para mostrar la vista principal actualizada
                     this.uiController.closeNotebook();
                 }
                 alert("Tus libretas se han importado y cargado con éxito.");
@@ -271,9 +245,9 @@ export class NotebookManager {
             id: 'nb_' + Date.now(),
             name: name,
             color: color,
-            coverImage: null, // Guardará la URL de datos de la imagen
-            titleColor: '#ffffff', // Color por defecto del título
-            titleFont: "'Outfit', sans-serif", // Fuente por defecto
+            coverImage: null,
+            titleColor: '#ffffff',
+            titleFont: "'Outfit', sans-serif",
             pages: [{
                 pageText: '',
                 pageDrawing: null,
@@ -433,7 +407,7 @@ export class NotebookManager {
     deleteNotebook(id) {
         const index = this.notebooks.findIndex(n => n.id === id);
         if (index !== -1) {
-            if (this.notebooks[index].isReadOnly) return false; // No eliminar manual
+            if (this.notebooks[index].isReadOnly) return false;
 
             this.notebooks.splice(index, 1);
 

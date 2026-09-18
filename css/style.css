@@ -1,22 +1,17 @@
-/* style.css - VR Notebook Web */
-
 :root {
-    /* Color Palette */
     --bg-color: #f6f8fd;
     --bg-grad-1: #f6f8fd;
     --bg-grad-2: #edf1fb;
-    --text-primary: #4b648c;
-    --text-secondary: #8ca0bc;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
     --accent-color: #d1b3ff;
 
-    /* Glassmorphism Tokens */
     --glass-bg: rgba(255, 255, 255, 0.2);
     --glass-bg-hover: rgba(255, 255, 255, 0.35);
     --glass-border: rgba(255, 255, 255, 0.8);
     --glass-shadow: 0 8px 32px 0 rgba(133, 143, 179, 0.15);
     --glass-blur: blur(16px);
 
-    /* Element specific */
     --toolbar-bg: rgba(255, 255, 255, 0.3);
     --canvas-bg: rgba(255, 255, 255, 0.6);
     --grid-color: rgba(75, 100, 140, 0.1);
@@ -28,13 +23,12 @@
     --notebook-item-bg: rgba(255, 255, 255, 0.3);
 }
 
-/* Light Theme Orbs (Default) */
 body::before,
 body::after {
     content: '';
     position: fixed;
     border-radius: 50%;
-    z-index: 0;
+    z-index: -1;
     pointer-events: none;
     transition: all 0.5s ease;
     filter: blur(100px);
@@ -66,7 +60,6 @@ body.dark-theme {
     --text-secondary: #94a3b8;
     --accent-color: #a855f7;
 
-    /* Glassmorphism Liquid effect */
     --glass-bg: rgba(30, 41, 59, 0.7);
     --glass-bg-hover: rgba(30, 41, 59, 0.9);
     --glass-border: rgba(255, 255, 255, 0.1);
@@ -116,14 +109,12 @@ body.dark-theme::after {
 body {
     font-family: 'Outfit', sans-serif;
     background: var(--bg-color);
-    /* Soft gradient background to emphasize glassmorphism */
     background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%);
     color: var(--text-primary);
     height: 100vh;
     overflow: hidden;
 }
 
-/* Base Glass Class */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
@@ -137,10 +128,8 @@ body {
     height: 100vh;
     width: 100vw;
     position: relative;
-    z-index: 1;
 }
 
-/* ===== Sidebar ===== */
 .sidebar {
     width: 290px;
     height: 100%;
@@ -213,11 +202,12 @@ body {
     transform: scale(1.05);
 }
 
-/* Tooltip Styles */
+.custom-tooltip,
 .tooltip {
     position: relative;
 }
 
+.custom-tooltip::after,
 .tooltip::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -235,16 +225,18 @@ body {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 100;
+    z-index: 1060;
     backdrop-filter: blur(4px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+body.dark-theme .custom-tooltip::after,
 body.dark-theme .tooltip::after {
     background: rgba(255, 255, 255, 0.9);
     color: black;
 }
 
+.custom-tooltip:hover::after,
 .tooltip:hover::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -261,12 +253,9 @@ body.dark-theme .tooltip::after {
     gap: 15px;
     align-content: flex-start;
     direction: rtl;
-    /* Move scrollbar to the left */
     padding-left: 5px;
-    /* Add a little spacing so scrollbar doesn't hug the edge */
 }
 
-/* Scrollbar styling */
 .notebook-list::-webkit-scrollbar {
     width: 5px;
 }
@@ -302,9 +291,7 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     background: transparent;
     border: 1px solid transparent;
     direction: ltr;
-    /* Reset direction for items */
     width: calc(50% - 7.5px);
-    /* Simulate 2 columns with 15px gap */
 }
 
 .notebook-item:hover .notebook-thumb {
@@ -344,26 +331,29 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     font-weight: 500;
 }
 
-/* ===== Main Content ===== */
 .main-content {
     flex: 1;
     position: relative;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
     overflow: hidden;
+    height: 100vh;
 }
 
-/* Common View Styles */
 .hidden {
     display: none !important;
 }
 
-/* -- Cover View (Closed Notebook) -- */
 .cover-view {
+    flex: 1;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     animation: fadeIn 0.5s ease;
 }
 
@@ -439,7 +429,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     z-index: 2;
 }
 
-/* Agujeros del espiral para la portada (simulado) */
 .notebook-cover::before {
     content: '';
     position: absolute;
@@ -464,14 +453,11 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     overflow-wrap: break-word;
     width: calc(100% - 50px);
     margin-left: 40px;
-    /* Dejar espacio para el espiral/lomo */
     max-height: 60%;
     overflow: hidden;
     box-sizing: border-box;
     cursor: text;
-    /* Editable */
     outline: none;
-    /* Quitar borde al hacer foco */
     border-radius: 5px;
     transition: background-color 0.2s;
 }
@@ -510,15 +496,15 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* Ocultar herramientas en modo solo lectura, excepto el botón de cerrar */
-.toolbar.read-only .tools-group:not(.color-tools),
-.toolbar.read-only .divider,
-.toolbar.read-only .color-tools input,
-.toolbar.read-only .color-tools #clearCanvasBtn {
-    display: none;
+.toolbar.read-only .toolbar-tools-scrollable,
+.toolbar.read-only .size-tools,
+.toolbar.read-only .color-tools,
+.toolbar.read-only .toolbar-divider,
+.toolbar.read-only #addPageBtn,
+.toolbar.read-only #deletePageBtn {
+    display: none !important;
 }
 
-/* Modal styles overrides for light theme */
 .modal .glass-btn {
     color: var(--text-primary);
     background: rgba(0, 0, 0, 0.05);
@@ -529,24 +515,144 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.1);
 }
 
-/* -- Open View (Canvas) -- */
 .open-view {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    /* Cambio a vertical */
     justify-content: flex-start;
-    align-items: center;
-    /* Alinear arriba para poder scrollear */
-    padding: 20px;
-    overflow-y: auto;
-    /* Scroll en toda la vista */
+    align-items: stretch;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
     animation: fadeIn 0.4s ease;
-    gap: 20px;
+    gap: 0;
+    position: relative;
 }
 
-/* 2-Page Layout System */
+.canvas-scroll-wrapper {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 35px 20px 60px 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .canvas-scroll-wrapper {
+        padding: 12px 10px 16px 10px;
+        align-items: stretch;
+    }
+
+    .two-page-wrapper {
+        height: 100%;
+        min-height: 100%;
+        align-items: stretch;
+    }
+
+    .two-page-wrapper.single-page-mode .canvas-container,
+    .canvas-container:not(.landscape-mode) {
+        aspect-ratio: auto !important;
+        min-height: calc(100vh - 110px);
+        height: 100%;
+        max-width: 100%;
+        border-radius: 14px !important;
+    }
+
+    .page-textarea {
+        top: 16px;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        width: calc(100% - 32px);
+        height: calc(100% - 32px);
+    }
+
+    .page-content {
+        background-size: 18px 18px;
+    }
+
+    .page-textarea p,
+    .page-textarea div,
+    .page-textarea {
+        font-size: 12.4px;
+        line-height: 18px;
+    }
+
+    .page-textarea h1 {
+        font-size: 20.5px;
+        line-height: 27px;
+    }
+
+    .page-textarea h2 {
+        font-size: 15.7px;
+        line-height: 21.4px;
+    }
+
+    .handwritten-mode .page-textarea p,
+    .handwritten-mode .page-textarea div,
+    .handwritten-mode .page-textarea {
+        font-size: 17px;
+        line-height: 21.4px;
+    }
+
+    .handwritten-mode .page-textarea h1 {
+        font-size: 22.2px;
+        line-height: 28.8px;
+    }
+
+    .handwritten-mode .page-textarea h2 {
+        font-size: 18.8px;
+        line-height: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .canvas-scroll-wrapper {
+        padding: 10px 8px 14px 8px;
+    }
+
+    .two-page-wrapper.single-page-mode .canvas-container,
+    .canvas-container:not(.landscape-mode) {
+        min-height: calc(100vh - 95px);
+        border-radius: 12px !important;
+    }
+
+    .page-textarea {
+        top: 12px;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        width: calc(100% - 24px);
+        height: calc(100% - 24px);
+    }
+
+    .page-content {
+        background-size: 17px 17px;
+    }
+
+    .page-textarea p,
+    .page-textarea div,
+    .page-textarea {
+        font-size: 12px;
+        line-height: 17px;
+    }
+
+    .page-textarea h1 {
+        font-size: 18.8px;
+        line-height: 24px;
+    }
+
+    .page-textarea h2 {
+        font-size: 14.5px;
+        line-height: 19.6px;
+    }
+}
+
 .two-page-wrapper {
     display: flex;
     flex-direction: row;
@@ -554,144 +660,118 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     max-width: 1600px;
     height: auto;
     justify-content: center;
-    align-items: stretch;
-    /* Make children fill height */
+    align-items: flex-start;
     perspective: 1500px;
+    margin: 0 auto;
+}
+
+.two-page-wrapper.single-page-mode {
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .two-page-wrapper.single-page-mode .left-page,
-.two-page-wrapper.single-page-mode .notebook-binder-center {
-    display: none;
+.two-page-wrapper.single-page-mode .notebook-binder-center,
+.two-page-wrapper.single-page-mode .single-binder {
+    display: none !important;
 }
 
-.two-page-wrapper:not(.single-page-mode) .single-binder {
-    display: none;
+.two-page-wrapper.single-page-mode .canvas-container {
+    max-width: 800px;
+    width: 100%;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12) !important;
+    margin: 0 auto;
+    perspective: none !important;
+}
+
+body.dark-theme .two-page-wrapper.single-page-mode .canvas-container {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+.two-page-wrapper:not(.single-page-mode) .single-binder,
+.two-page-wrapper:not(.single-page-mode) .notebook-binder-center {
+    display: none !important;
 }
 
 .two-page-wrapper:not(.single-page-mode) .canvas-container {
-    max-width: 800px;
-    border-radius: 0;
-    /* Reset radius, will set specific ones below */
+    max-width: 750px;
+    width: 50%;
 }
 
 .two-page-wrapper:not(.single-page-mode) .left-page {
-    border-radius: 16px 0 0 16px;
-    box-shadow: -5px 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 16px 0 0 16px !important;
+    box-shadow: -5px 10px 30px rgba(0, 0, 0, 0.1) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .two-page-wrapper:not(.single-page-mode) .right-page {
-    border-radius: 0 16px 16px 0;
-    box-shadow: 5px 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 0 16px 16px 0 !important;
+    box-shadow: 5px 10px 30px rgba(0, 0, 0, 0.1) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.notebook-binder-center {
-    width: 40px;
-    flex-shrink: 0;
-    background: linear-gradient(to right, #d5d5d5 0%, #e8e8e8 20%, #ffffff 50%, #e8e8e8 80%, #d5d5d5 100%);
-    position: relative;
-    z-index: 5;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1), 0 0 15px rgba(0, 0, 0, 0.1);
+body.dark-theme .two-page-wrapper:not(.single-page-mode) .left-page {
+    box-shadow: -5px 10px 35px rgba(0, 0, 0, 0.45) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.notebook-binder-center::after {
-    content: '';
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    top: 20px;
-    bottom: 20px;
-    /* Simulated spiral rings crossing the center */
-    background-image:
-        radial-gradient(circle, #777 4px, transparent 5px),
-        linear-gradient(to right, transparent 2px, #888 2px, #eee 50%, #888 18px, transparent 18px);
-    background-size: 20px 30px, 20px 30px;
-    background-position: center, center;
-    background-repeat: repeat-y;
+body.dark-theme .two-page-wrapper:not(.single-page-mode) .right-page {
+    box-shadow: 5px 10px 35px rgba(0, 0, 0, 0.45) !important;
+    border-left: 1px solid rgba(0, 0, 0, 0.4);
 }
 
-/* Landscape Mode for Canvas */
 .canvas-container.landscape-mode {
     aspect-ratio: 29.7 / 21;
     flex-direction: column;
     max-width: 1000px;
-    border-radius: 0 0 16px 16px;
-}
-
-.canvas-container.landscape-mode .notebook-binder {
-    width: 100%;
-    height: 30px;
-    background: linear-gradient(to bottom, #e0e0e0, #f5f5f5);
-    border-right: none;
-    border-bottom: 1px solid #ccc;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.canvas-container.landscape-mode .notebook-binder::after {
-    left: 20px;
-    right: 20px;
-    top: 5px;
-    bottom: 5px;
-    background-image:
-        radial-gradient(circle, #777 4px, transparent 5px),
-        linear-gradient(to bottom, transparent 2px, #888 2px, #eee 50%, #888 18px, transparent 18px);
-    background-size: 30px 20px, 30px 20px;
-    background-repeat: repeat-x;
+    border-radius: 16px !important;
 }
 
 .canvas-container {
     width: 100%;
     max-width: 800px;
     aspect-ratio: 21 / 29.7;
-    /* Proporción A4 */
     background: var(--canvas-bg);
-    border-radius: 0 16px 16px 0;
-    box-shadow: 5px 10px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
     position: relative;
     display: flex;
-    flex-shrink: 1;
-    /* Allow shrinking if needed */
-    margin-bottom: 0;
+    flex-shrink: 0;
+    margin: 0 auto;
     overflow: hidden;
-    /* La hoja es un bloque sólido */
+    transition: width 0.3s ease, max-width 0.3s ease;
 }
 
-/* Binder / Spiral rings */
-.notebook-binder {
-    width: 30px;
-    height: 100%;
-    background: linear-gradient(to right, #e0e0e0, #f5f5f5);
-    border-right: 1px solid #ccc;
-    position: relative;
-    z-index: 5;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+body.dark-theme .canvas-container {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 }
 
-.notebook-binder::after {
-    content: '';
-    position: absolute;
-    left: 10px;
-    top: 20px;
-    bottom: 20px;
-    width: 10px;
-    /* Simulated rings */
-    background-image:
-        radial-gradient(circle, #888 3px, transparent 4px),
-        linear-gradient(to right, #999, #eee 30%, #999);
-    background-size: 10px 30px, 15px 3px;
-    background-position: center, -5px 13px;
-    background-repeat: repeat-y;
+.notebook-binder,
+.single-binder,
+.notebook-binder-center {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
 
 .page-content {
     flex: 1;
     position: relative;
-    /* Grid lines for notebook paper */
     background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
     background-size: 22.5px 22.5px;
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path d="M6 0v12M0 6h12" stroke="%23333" stroke-width="1.5"/></svg>') 6 6, crosshair;
 }
 
-#drawingCanvas {
+.page-content canvas,
+#drawingCanvasLeft,
+#drawingCanvasRight {
     position: absolute;
     top: 0;
     left: 0;
@@ -703,25 +783,34 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
 .page-textarea {
     position: absolute;
     top: 25px;
-    /* Un cuadro de margen superior */
     bottom: 25px;
-    /* Un cuadro de margen inferior */
     left: 25px;
-    /* Un cuadro de margen izquierdo */
     right: 25px;
-    /* Un cuadro de margen derecho */
     width: calc(100% - 50px);
     height: calc(100% - 50px);
-    z-index: 12;
+    z-index: 15;
     background: transparent;
     border: none;
     outline: none;
     resize: none;
     color: var(--text-primary);
     overflow: hidden;
-    pointer-events: none;
-    /* Inactivo por defecto */
+    pointer-events: auto;
+    cursor: text;
     padding: 0;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: default !important;
+}
+
+.page-textarea:not(.active) {
+    pointer-events: none;
+}
+
+.page-textarea.active {
+    pointer-events: auto !important;
+    cursor: text !important;
+    z-index: 20 !important;
 }
 
 .page-textarea:empty:before {
@@ -743,7 +832,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     outline: none;
 }
 
-/* Listas */
 .page-textarea ul,
 .page-textarea ol {
     margin: 10px 0 10px 30px;
@@ -757,7 +845,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     line-height: 25px;
 }
 
-/* Imágenes dentro del texto */
 .page-textarea img {
     max-width: 100%;
     max-height: 400px;
@@ -768,39 +855,31 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Normal Text */
 .page-textarea p,
 .page-textarea div,
 .page-textarea {
     font-size: 16.2px;
     line-height: 22.5px;
-    /* 1 row */
     font-weight: 400;
 }
 
-/* Title (H1) */
 .page-textarea h1 {
     font-size: 34.2px;
     line-height: 45px;
-    /* 2 rows */
     font-weight: 700;
 }
 
-/* Subtitle (H2) */
 .page-textarea h2 {
     font-size: 21.6px;
     line-height: 22.5px;
-    /* 1 row */
     font-weight: 600;
 }
 
 .page-textarea.active {
     pointer-events: auto;
-    /* Activo cuando se elige la herramienta de texto */
     cursor: text;
 }
 
-/* Handwritten Mode */
 .handwritten-mode .page-textarea,
 .handwritten-mode .page-textarea * {
     font-family: 'Caveat', cursive !important;
@@ -823,74 +902,257 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     line-height: 32.4px;
 }
 
-/* -- Toolbar -- */
 .toolbar {
-    order: -1;
-    /* Mover arriba del canvas */
-    width: calc(100% + 40px);
-    /* 100% plus 40px to compensate for 20px padding on each side of .open-view */
-    min-height: 60px;
+    order: 0;
+    width: 100%;
+    min-height: 50px;
     height: auto;
     border-radius: 0;
-    /* Remove rounded corners for full width */
     border-left: none;
     border-right: none;
     border-top: none;
-    padding: 10px 20px;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 6px 12px;
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap;
+    justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    margin: -20px -20px 10px -20px;
-    /* Pull it to the edges */
+    gap: 8px;
+    margin: 0;
     position: sticky;
-    top: -20px;
-    /* Stick exactly to the top */
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.toolbar-tools-scrollable {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex: 1;
+    justify-content: flex-start;
+    padding: 2px 4px;
+}
+
+@media (min-width: 1200px) {
+    .toolbar-tools-scrollable {
+        justify-content: center;
+    }
+}
+
+.toolbar-tools-scrollable::-webkit-scrollbar {
+    display: none;
+}
+
+.btn-close-notebook {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.btn-close-notebook:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+body.dark-theme .btn-close-notebook {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+body.dark-theme .btn-close-notebook:hover {
+    background: rgba(239, 68, 68, 0.35);
+    color: #ffffff;
+}
+
+.active-notebook-badge {
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.dark-theme .active-notebook-badge {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mobile-nav-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.mobile-nav-toggle:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--accent-color);
+}
+
+body.dark-theme .mobile-nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .tools-group {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    flex-shrink: 0;
 }
 
 .divider,
 .toolbar-divider {
     width: 1px;
-    height: 30px;
+    height: 22px;
     background: var(--glass-border);
+    flex-shrink: 0;
+    margin: 0 2px;
 }
 
 .tool-btn {
     background: transparent;
     border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
+    width: 36px;
+    height: 36px;
+    border-radius: 50% !important;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
-    color: var(--text-secondary);
+    font-size: 1.3rem;
+    color: var(--text-primary);
+    opacity: 0.85;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .tool-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--accent-color);
+    opacity: 1;
+}
+
+body.dark-theme .tool-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
 }
 
 .tool-btn.active {
-    background: var(--accent-color);
-    color: white;
-    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+    background: var(--accent-color) !important;
+    color: white !important;
+    opacity: 1;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+}
+
+@media (max-width: 768px) {
+    .toolbar {
+        padding: 4px 6px;
+        min-height: 44px;
+        gap: 4px;
+    }
+    .btn-close-notebook {
+        padding: 4px 8px;
+        font-size: 0.8rem;
+    }
+    .tool-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 1.1rem;
+        border-radius: 50% !important;
+    }
+    .pagination-tools {
+        gap: 2px !important;
+    }
+    .pagination-tools .tool-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.95rem;
+    }
+    .pagination-tools #pageIndicator {
+        min-width: 28px;
+        font-size: 0.8rem;
+        padding: 0 2px;
+    }
+    .color-picker-input {
+        width: 28px;
+        height: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .toolbar {
+        padding: 3px 4px;
+        min-height: 42px;
+        gap: 3px;
+    }
+    .btn-close-notebook {
+        padding: 4px 6px;
+    }
+    .tool-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 1.05rem;
+        border-radius: 50% !important;
+    }
+    .pagination-tools {
+        gap: 1px !important;
+    }
+    .pagination-tools .tool-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.9rem;
+    }
+    .pagination-tools #pageIndicator {
+        min-width: 26px;
+        font-size: 0.75rem;
+        padding: 0 1px;
+    }
+    .color-picker-input {
+        width: 26px;
+        height: 26px;
+    }
 }
 
 .tool-label {
@@ -931,29 +1193,34 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     border-radius: 50%;
 }
 
-/* ===== Modals ===== */
+.modal-content.glass-panel {
+    background: var(--modal-bg) !important;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--glass-shadow);
+    color: var(--text-primary);
+}
+
+.modal-backdrop.show {
+    background-color: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
-}
-
-.modal {
-    width: 350px;
-    padding: 30px;
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background: var(--modal-bg);
+    z-index: 1050;
 }
 
 .modal h3 {
@@ -991,7 +1258,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     margin-top: 10px;
 }
 
-/* -- Image Widgets -- */
 .image-widget {
     position: absolute;
     z-index: 15;
@@ -1065,7 +1331,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     display: block;
 }
 
-/* ===== Premium Holographic Manual Cover ===== */
 .manual-cover-premium {
     position: absolute;
     top: 0;
@@ -1163,7 +1428,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     letter-spacing: 1px;
 }
 
-/* ===== Toast Notifications ===== */
 .toast-notification {
     position: fixed;
     bottom: 30px;
@@ -1225,7 +1489,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
 }
 
 
-/* ===== Sidebar Footer ===== */
 .sidebar-footer {
     margin-top: auto;
     padding-top: 15px;
@@ -1245,7 +1508,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     margin: 5px 0;
 }
 
-/* ===== Responsive Design (Tablets & Mobile) ===== */
 .mobile-menu-btn {
     display: none;
     position: absolute;
@@ -1269,28 +1531,33 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     background: var(--btn-hover-bg);
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 991.98px) {
     .mobile-menu-btn {
         display: flex;
     }
 
-    .sidebar {
-        position: fixed;
-        left: -320px;
-        top: 0;
-        bottom: 0;
-        width: 280px;
-        z-index: 1001;
-        /* Above other elements */
-        transition: left 0.3s ease;
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
+    .sidebar.offcanvas-lg {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        z-index: 1055 !important;
+        width: 310px !important;
+        max-width: 86vw !important;
+        background: rgba(255, 255, 255, 0.96) !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
+        border-right: 1px solid var(--glass-border) !important;
+        box-shadow: 10px 0 35px rgba(0, 0, 0, 0.35) !important;
+        overflow-y: auto !important;
     }
 
-    .sidebar.show {
-        left: 0;
+    body.dark-theme .sidebar.offcanvas-lg {
+        background: rgba(15, 23, 42, 0.96) !important;
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.7) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
-    /* Cover View scaling */
     .notebook-cover {
         width: 90vw;
         max-width: 400px;
@@ -1302,20 +1569,15 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
         font-size: 2rem;
     }
 
-    /* Canvas scaling */
     .canvas-container {
         width: 100%;
         max-width: 100%;
         height: auto;
         aspect-ratio: 21 / 29.7;
+        margin: 0 auto;
+        border-radius: 14px !important;
     }
 
-    /* Adjust toolbar space for hamburger button */
-    .open-view {
-        padding-top: 70px;
-    }
-
-    /* Hide sticky dispenser to save space in small screens */
     #stickyDispenserWrapper {
         display: none !important;
     }
@@ -1326,7 +1588,31 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Custom Brush Cursor */
+@media (min-width: 992px) {
+    .sidebar.offcanvas-lg {
+        position: static !important;
+        transform: none !important;
+        visibility: visible !important;
+        width: 290px !important;
+        height: 100vh !important;
+        flex-shrink: 0;
+        z-index: 10 !important;
+        background: rgba(255, 255, 255, 0.3) !important;
+        box-shadow: none !important;
+    }
+
+    body.dark-theme .sidebar.offcanvas-lg {
+        background: var(--glass-bg) !important;
+    }
+}
+
+.offcanvas-backdrop {
+    z-index: 1040 !important;
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+}
+
 .brush-cursor {
     position: fixed;
     border: 1.5px dashed #444;
@@ -1342,35 +1628,6 @@ body.dark-theme .notebook-list::-webkit-scrollbar-thumb:hover {
     display: block;
 }
 
-.floating-close-btn {
-    position: absolute;
-    top: 25px;
-    right: 25px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(5px);
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    cursor: pointer;
-    z-index: 1000;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.floating-close-btn:hover {
-    background: rgba(255, 77, 77, 0.2);
-    color: #ff4d4d;
-    border-color: rgba(255, 77, 77, 0.4);
-    transform: scale(1.1);
-}
-
-/* ===== Manual / Empty State Cover ===== */
 .notebook-cover.manual-mode {
     background: transparent !important;
     background-color: transparent !important;

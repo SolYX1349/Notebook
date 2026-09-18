@@ -9,29 +9,28 @@ export class DrawingTools {
         this.ctx.lineCap = 'round';
         this.ctx.lineJoin = 'round';
 
-        // Reset composite operation
         this.ctx.globalCompositeOperation = 'source-over';
 
         switch (toolName) {
-            case 'pen': // Plumón (Marcador suave)
+            case 'pen':
                 this.ctx.lineWidth = customWidth || 6;
                 this.ctx.globalAlpha = 0.8;
                 break;
-            case 'pencil': // Lápiz (Fino y nítido)
+            case 'pencil':
                 this.ctx.lineWidth = customWidth || 2;
                 this.ctx.globalAlpha = 0.9;
                 break;
-            case 'crayon': // Crayola (Texturizado)
+            case 'crayon':
                 this.ctx.lineWidth = customWidth || 15;
                 this.ctx.globalAlpha = 1.0;
                 break;
-            case 'eraser': // Borrador
+            case 'eraser':
                 this.ctx.globalCompositeOperation = 'destination-out';
                 this.ctx.lineWidth = customWidth || 20;
                 this.ctx.globalAlpha = 1.0;
                 break;
-            case 'fill': // Relleno
-                this.ctx.lineWidth = 1; // Not used for fill
+            case 'fill':
+                this.ctx.lineWidth = 1;
                 this.ctx.globalAlpha = 1.0;
                 break;
             default:
@@ -40,13 +39,11 @@ export class DrawingTools {
         }
     }
 
-    // Efecto de crayón dispersando puntos
     drawCrayon(x, y, color, customWidth = null) {
         const radius = (customWidth || 15) / 2;
         this.ctx.fillStyle = color;
-        this.ctx.globalAlpha = 0.4; // Capas semitransparentes
+        this.ctx.globalAlpha = 0.4;
 
-        // Simular textura dibujando varios círculos pequeños desplazados
         for (let i = 0; i < 5; i++) {
             const offsetX = (Math.random() - 0.5) * radius;
             const offsetY = (Math.random() - 0.5) * radius;

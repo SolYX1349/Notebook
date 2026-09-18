@@ -15,17 +15,13 @@ export class ExportUtils {
 
         const { jsPDF } = window.jspdf;
         
-        // El cover es más vertical, así que creamos un documento portrait (vertical) A4
         const pdf = new jsPDF('portrait', 'pt', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
 
-        // 1. CAPTURAR Y AÑADIR LA PORTADA (Página 1)
-        // Guardamos el estado original del elemento para restaurarlo
         const originalTransform = coverElement.style.transform;
         const originalBoxShadow = coverElement.style.boxShadow;
         
-        // Removemos efectos 3D temporales para la captura 2D
         coverElement.style.transform = 'none';
         coverElement.style.boxShadow = 'none';
 
@@ -38,7 +34,6 @@ export class ExportUtils {
             
             const coverImgData = coverCanvas.toDataURL('image/jpeg', 0.95);
             
-            // Centrar portada en la página A4
             const coverRatio = coverCanvas.width / coverCanvas.height;
             const targetRatio = pdfWidth / pdfHeight;
             let finalW = pdfWidth;
@@ -50,7 +45,6 @@ export class ExportUtils {
                 finalW = pdfHeight * coverRatio;
             }
             
-            // Agregar un poco de margen a la portada
             const margin = 40;
             finalW -= margin * 2;
             finalH = finalW / coverRatio;
@@ -62,13 +56,11 @@ export class ExportUtils {
         } catch (e) {
             console.error("Error capturando portada", e);
         } finally {
-            // Restaurar estilos
             coverElement.style.transform = originalTransform;
             coverElement.style.boxShadow = originalBoxShadow;
         }
 
-        // 2. CAPTURAR Y AÑADIR LA HOJA DIBUJADA (Página 2)
-        pdf.addPage('a4', 'landscape'); // La hoja interna suele ser apaisada en el visor
+        pdf.addPage('a4', 'landscape');
         
         const landWidth = pdf.internal.pageSize.getWidth();
         const landHeight = pdf.internal.pageSize.getHeight();
@@ -81,7 +73,6 @@ export class ExportUtils {
                 backgroundColor: '#ffffff',
                 useCORS: true,
                 onclone: function(clonedDoc) {
-                    // Asegurar que la vista abierta sea visible en el clon para poder capturarla
                     const clonedOpenView = clonedDoc.getElementById('openView');
                     if (clonedOpenView) {
                         clonedOpenView.classList.remove('hidden');
@@ -112,7 +103,6 @@ export class ExportUtils {
             console.error("Error capturando la hoja:", e);
         }
         
-        // Guardar el archivo final
         pdf.save(`${notebook.name || 'Libreta'}.pdf`);
     }
 }

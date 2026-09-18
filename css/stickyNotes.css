@@ -1,9 +1,8 @@
-/* -- Sticky Notes (Post-its) -- */
 .sticky-note {
     position: absolute;
     width: 150px;
     height: 150px;
-    background-color: #ffd54f; /* Yellow post-it color */
+    background-color: #ffd54f;
     box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
     display: flex;
     flex-direction: column;
@@ -19,7 +18,6 @@
     z-index: 9999 !important;
 }
 
-/* Subtle gradient for paper effect */
 .sticky-note::before {
     content: '';
     position: absolute;
@@ -59,7 +57,7 @@
 .sticky-content {
     flex: 1;
     padding: 10px;
-    font-family: 'Caveat', cursive; /* Handwritten font */
+    font-family: 'Caveat', cursive;
     font-size: 1.2rem;
     line-height: 1.2;
     color: #333;
@@ -68,7 +66,6 @@
     cursor: text;
 }
 
-/* Hide scrollbar for sticky content */
 .sticky-content::-webkit-scrollbar {
     width: 4px;
 }
@@ -81,7 +78,6 @@
 }
 
 .dispenser-note {
-    /* Style for the note inside the dispenser */
     position: relative !important;
     top: 0 !important;
     left: 0 !important;

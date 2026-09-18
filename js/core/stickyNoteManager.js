@@ -5,7 +5,6 @@ export class StickyNoteManager {
         this.pageContainer = null;
         this.isReadOnly = false;
         
-        // Estado para arrastre
         this.activeNote = null;
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
@@ -32,9 +31,7 @@ export class StickyNoteManager {
         const note = document.createElement('div');
         note.className = 'sticky-note dispenser-note';
         note.innerHTML = `
-            <div class="sticky-header">
-                <!-- Title removed from here -->
-            </div>
+            <div class="sticky-header"></div>
             <div class="sticky-content" contenteditable="true" spellcheck="false"></div>
         `;
 
@@ -42,7 +39,7 @@ export class StickyNoteManager {
             const isSelectTool = document.querySelector('.tool-btn.active')?.dataset.tool === 'select';
             if (!isSelectTool) return;
             
-            e.preventDefault(); // Evitar arrastre nativo de texto
+            e.preventDefault();
             this.startDrag(e, note, true);
         });
         
@@ -53,7 +50,6 @@ export class StickyNoteManager {
         if (!this.pageContainer) return;
         this.pageIndex = pageIndex;
         
-        // Limpiar notas anteriores de la página (pero no el dispensador)
         const oldNotes = this.pageContainer.querySelectorAll('.sticky-note');
         oldNotes.forEach(n => n.remove());
 
@@ -84,7 +80,7 @@ export class StickyNoteManager {
                 const isSelectTool = document.querySelector('.tool-btn.active')?.dataset.tool === 'select';
                 if (!isSelectTool) return;
                 
-                e.preventDefault(); // Evitar selección/arrastre de texto nativo al mover
+                e.preventDefault();
                 this.startDrag(e, note, false);
             });
 
@@ -116,11 +112,9 @@ export class StickyNoteManager {
         this.dragOffset.y = e.clientY - rect.top;
         
         if (isFromDispenser) {
-            // Mover temporalmente al body para permitir arrastre sin recortes de overflow
             document.body.appendChild(noteElement);
-            noteElement.classList.remove('dispenser-note'); // Importante para quitar left:0 !important
+            noteElement.classList.remove('dispenser-note');
             
-            // Re-calculate drag offset relative to the body since it was relative to the old position
             this.dragOffset.x = e.clientX - rect.left;
             this.dragOffset.y = e.clientY - rect.top;
             
@@ -128,7 +122,6 @@ export class StickyNoteManager {
             noteElement.style.left = (e.clientX - this.dragOffset.x) + 'px';
             noteElement.style.top = (e.clientY - this.dragOffset.y) + 'px';
             
-            // Generar uno nuevo inmediatamente en el dispensador
             this.spawnDispenserNote();
         }
     }
@@ -167,11 +160,9 @@ export class StickyNoteManager {
         const noteRect = this.activeNote.getBoundingClientRect();
         
         if (this.activeNote.isFromDispenser) {
-            // Verificar si se soltó dentro de pageContainer
             if (e.clientX > pageRect.left && e.clientX < pageRect.right &&
                 e.clientY > pageRect.top && e.clientY < pageRect.bottom) {
                 
-                // Calculate relative position based on the wrapper
                 let relativeX = noteRect.left - pageRect.left;
                 let relativeY = noteRect.top - pageRect.top;
                 
@@ -193,7 +184,6 @@ export class StickyNoteManager {
                     y: relativeY
                 };
                 
-                // Guardar
                 const nb = this.nbManager.getActiveNotebook();
                 const indexToUse = this.pageIndex !== null ? this.pageIndex : (nb ? nb.activePageIndex : 0);
                 if (nb && nb.pages[indexToUse]) {
@@ -202,13 +192,10 @@ export class StickyNoteManager {
                     activePage.pageNotes.push(newNote);
                     this.nbManager.saveNotebooks();
                     
-                    // Renderizar en la página
                     this.renderPageNote(newNote);
                 }
-                // Eliminar el nodo temporal arrastrado ya que se convirtió en una nota de página
                 this.activeNote.remove();
             } else {
-                // Si se soltó fuera de la libreta, lo devolvemos al dispensador
                 this.activeNote.classList.remove('is-dragging');
                 this.activeNote.style.left = '';
                 this.activeNote.style.top = '';
@@ -216,8 +203,6 @@ export class StickyNoteManager {
                 this.dispenserContainer.appendChild(this.activeNote);
             }
         } else {
-            // Se movió una nota existente
-            // Calcular nueva posición relativa
             let relativeX = noteRect.left - pageRect.left;
             let relativeY = noteRect.top - pageRect.top;
             
@@ -268,14 +253,11 @@ export class StickyNoteManager {
     spawnNoteOnPage() {
         if (this.isReadOnly || !this.pageContainer) return;
 
-        // Try to place it in the center of the page
         const pageRect = this.pageContainer.getBoundingClientRect();
         
-        // Typical sticky note width is about 120-150px
         const noteWidth = 120;
         const noteHeight = 120;
         
-        // Random offset so they don't stack exactly on top of each other
         const offset = Math.floor(Math.random() * 40) - 20;
         
         const relativeX = (pageRect.width / 2) - (noteWidth / 2) + offset;
@@ -297,7 +279,6 @@ export class StickyNoteManager {
             activePage.pageNotes.push(newNote);
             this.nbManager.saveNotebooks();
             
-            // Renderizar en la página
             this.renderPageNote(newNote);
         }
     }

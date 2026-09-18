@@ -25,7 +25,6 @@ body {
     min-height: 100vh;
 }
 
-/* Background Animations */
 .background-animations {
     position: fixed;
     top: 0;
@@ -90,7 +89,6 @@ body {
     100% { transform: translate(0, 0) scale(1); }
 }
 
-/* Reusable Glass Panel */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
@@ -99,7 +97,6 @@ body {
     box-shadow: var(--glass-shadow);
 }
 
-/* Hero Section */
 .hero-section {
     display: flex;
     align-items: center;
@@ -202,7 +199,6 @@ body {
     background: rgba(255,255,255,0.1);
 }
 
-/* Hero Visual */
 .hero-visual {
     flex: 1;
     display: flex;
@@ -280,7 +276,6 @@ body {
     100% { transform: translateY(-10px) rotate(18deg); }
 }
 
-/* Features Section */
 .features-section {
     padding: 50px 5% 100px;
     max-width: 1300px;
@@ -327,7 +322,6 @@ body {
     line-height: 1.6;
 }
 
-/* Footer */
 .footer {
     text-align: center;
     padding: 40px;
@@ -336,12 +330,11 @@ body {
     margin-top: 50px;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
     .hero-section {
         flex-direction: column;
         text-align: center;
-        padding-top: 150px;
+        padding-top: 40px;
     }
     
     .hero-content {
@@ -351,10 +344,17 @@ body {
     }
     
     .hero-title {
-        font-size: 3rem;
+        font-size: clamp(2.2rem, 7vw, 3.5rem);
     }
     
     .hero-visual {
-        margin-top: 50px;
+        margin-top: 30px;
+        max-width: 100%;
+    }
+
+    .floating-notebook {
+        width: min(280px, 80vw);
+        height: auto;
+        aspect-ratio: 3 / 4;
     }
 }

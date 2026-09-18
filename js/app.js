@@ -5,7 +5,6 @@ import { StickyNoteManager } from './core/stickyNoteManager.js';
 import { UIController } from './ui/uiController.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicializar módulos
     const nbManager = new NotebookManager();
     
     const managers = {
@@ -23,11 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const uiController = new UIController(nbManager, managers);
 
-    // Iniciar controladores
     uiController.init();
     nbManager.init(uiController);
     
-    // Iniciar controladores de capas con sus respectivos contenedores
     managers.left.image.init(document.getElementById('imageLayerLeft'));
     managers.right.image.init(document.getElementById('imageLayerRight'));
     

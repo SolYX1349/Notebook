@@ -2,7 +2,6 @@ export class UIController {
     constructor(notebookManager, managers) {
         this.nbManager = notebookManager;
         this.managers = managers;
-        // Estado inicial de la UI
         this.isTwoPageView = false;
 
         const isDark = localStorage.getItem('glass_theme') !== 'light';
@@ -11,13 +10,12 @@ export class UIController {
         this.textColor = defaultColor;
         this.brushColor = defaultColor;
 
-        // Asignar colores por defecto al inicializar
         this.backupWarningShown = false;
+        this.isAutoPaging = false;
+        this.savedTextRange = null;
 
-        // DOM Elements
         this.notebookListEl = document.getElementById('notebookList');
 
-        // Views
         this.coverView = document.getElementById('coverView');
         this.openView = document.getElementById('openView');
 
@@ -29,16 +27,11 @@ export class UIController {
         this.coverColorInput = document.getElementById('coverColorInput');
         this.titleFontSelect = document.getElementById('titleFontSelect');
 
-        // Toolbar Elements
         this.toolBtns = document.querySelectorAll('.tool-btn[data-tool]');
         this.colorPicker = document.getElementById('colorPicker');
         this.closeNotebookBtn = document.getElementById('closeNotebookBtn');
         this.pageTextareaLeft = document.getElementById('pageTextareaLeft');
         this.pageTextareaRight = document.getElementById('pageTextareaRight');
-
-        // Asignar colores por defecto al inicializar
-        this.pageTextareaLeft.style.color = this.textColor;
-        this.pageTextareaRight.style.color = this.textColor;
 
         this.canvasContainerLeft = document.getElementById('canvasContainerLeft');
         this.canvasContainerRight = document.getElementById('canvasContainerRight');
@@ -50,7 +43,6 @@ export class UIController {
         this.addStickyNoteBtn = document.getElementById('addStickyNoteBtn');
         this.toggleHandwritingBtn = document.getElementById('toggleHandwritingBtn');
 
-        // Pagination Elements
         this.pageIndicator = document.getElementById('pageIndicator');
         this.prevPageBtn = document.getElementById('prevPageBtn');
         this.nextPageBtn = document.getElementById('nextPageBtn');
@@ -58,14 +50,12 @@ export class UIController {
         this.deletePageBtn = document.getElementById('deletePageBtn');
         this.pageIndicator = document.getElementById('pageIndicator');
 
-        // Elementos de herramientas
         this.colorPicker = document.getElementById('colorPicker');
         if (this.colorPicker) {
             this.colorPicker.value = this.textColor;
         }
         this.lineWidthSlider = document.getElementById('lineWidthSlider');
 
-        // Elementos Modales
         this.addNotebookBtn = document.getElementById('addNotebookBtn');
         this.saveToPcBtn = document.getElementById('saveToPcBtn');
         this.importFromPcBtn = document.getElementById('importFromPcBtn');
@@ -96,7 +86,6 @@ export class UIController {
 
         this.themeToggleBtn = document.getElementById('themeToggleBtn');
 
-        // Responsive Mobile Menu
         this.mobileMenuBtn = document.getElementById('mobileMenuBtn');
         this.sidebar = document.querySelector('.sidebar');
     }
@@ -108,18 +97,26 @@ export class UIController {
 
     loadTheme() {
         const savedTheme = localStorage.getItem('glass_theme');
-        if (savedTheme === 'light') {
+        const isDark = savedTheme !== 'light';
+        if (!isDark) {
             document.body.classList.remove('dark-theme');
+            document.documentElement.setAttribute('data-bs-theme', 'light');
             if (this.themeToggleBtn) this.themeToggleBtn.innerHTML = '<i class="ph ph-moon"></i>';
+            this.textColor = '#1e293b';
+            this.brushColor = '#1e293b';
+            if (this.colorPicker) this.colorPicker.value = '#1e293b';
         } else {
             document.body.classList.add('dark-theme');
+            document.documentElement.setAttribute('data-bs-theme', 'dark');
             if (this.themeToggleBtn) this.themeToggleBtn.innerHTML = '<i class="ph ph-sun"></i>';
-            localStorage.setItem('glass_theme', 'dark'); // Default to dark
+            localStorage.setItem('glass_theme', 'dark');
+            this.textColor = '#ffffff';
+            this.brushColor = '#ffffff';
+            if (this.colorPicker) this.colorPicker.value = '#ffffff';
         }
     }
 
     bindEvents() {
-        // Menu de libretas
         this.addNotebookBtn.addEventListener('click', () => this.showModal());
 
         const addManualBtn = document.getElementById('addManualBtn');
@@ -135,7 +132,7 @@ export class UIController {
 
         if (this.saveToPcBtn) {
             this.saveToPcBtn.addEventListener('click', () => {
-                this.saveNotebookModal.classList.remove('hidden');
+                this.showModal(this.saveNotebookModal);
             });
         }
 
@@ -147,15 +144,13 @@ export class UIController {
 
         if (this.cancelSaveNotebookBtn) {
             this.cancelSaveNotebookBtn.addEventListener('click', () => {
-                this.saveNotebookModal.classList.add('hidden');
+                this.hideModal(this.saveNotebookModal);
             });
         }
 
         if (this.confirmSaveNotebookBtn) {
             this.confirmSaveNotebookBtn.addEventListener('click', async () => {
-                this.saveNotebookModal.classList.add('hidden');
-                // Al presionar este botón, se registra el evento del usuario (user gesture),
-                // y ya podemos llamar a showDirectoryPicker() de forma segura.
+                this.hideModal(this.saveNotebookModal);
                 await this.nbManager.exportDatabaseToPC();
             });
         }
@@ -166,19 +161,18 @@ export class UIController {
             });
         }
 
-        this.cancelNewNotebookBtn.addEventListener('click', () => this.hideModal());
+        this.cancelNewNotebookBtn.addEventListener('click', () => this.hideModal(this.newNotebookModal));
         this.confirmNewNotebookBtn.addEventListener('click', () => {
             const name = this.newNotebookNameInput.value.trim() || 'Nueva Libreta';
             const color = this.newNotebookColorInput.value;
             this.nbManager.createNotebook(name, color);
 
-            // Show toast only when creating the very first custom notebook
             const customNotebooksCount = this.nbManager.notebooks.filter(n => !n.isReadOnly).length;
             if (customNotebooksCount === 1) {
                 this.checkAndShowBackupWarning();
             }
 
-            this.hideModal();
+            this.hideModal(this.newNotebookModal);
         });
 
         this.newNotebookNameInput.addEventListener('keydown', (e) => {
@@ -189,7 +183,7 @@ export class UIController {
         });
 
         this.cancelDeletePageBtn.addEventListener('click', () => {
-            this.deletePageModal.classList.add('hidden');
+            this.hideModal(this.deletePageModal);
             this.pageToDeleteNotebookId = null;
         });
 
@@ -206,13 +200,13 @@ export class UIController {
                     console.error('Error in delete page logic:', err);
                     alert('Se produjo un error al eliminar: ' + err.message);
                 }
-                this.deletePageModal.classList.add('hidden');
+                this.hideModal(this.deletePageModal);
                 this.pageToDeleteNotebookId = null;
             }
         });
 
         this.cancelDeleteNotebookBtn.addEventListener('click', () => {
-            this.deleteNotebookModal.classList.add('hidden');
+            this.hideModal(this.deleteNotebookModal);
             this.notebookToDeleteId = null;
         });
 
@@ -220,24 +214,20 @@ export class UIController {
             if (this.notebookToDeleteId) {
                 this.nbManager.deleteNotebook(this.notebookToDeleteId);
                 this.lastNotebookDeletionTime = Date.now();
-                this.deleteNotebookModal.classList.add('hidden');
+                this.hideModal(this.deleteNotebookModal);
                 this.notebookToDeleteId = null;
             }
         });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                if (!this.newNotebookModal.classList.contains('hidden')) {
-                    this.hideModal();
-                } else if (!this.saveNotebookModal.classList.contains('hidden')) {
-                    this.saveNotebookModal.classList.add('hidden');
-                } else if (!this.deleteNotebookModal.classList.contains('hidden')) {
-                    this.deleteNotebookModal.classList.add('hidden');
-                    this.notebookToDeleteId = null;
-                } else if (!this.deletePageModal.classList.contains('hidden')) {
-                    this.deletePageModal.classList.add('hidden');
-                    this.pageToDeleteNotebookId = null;
-                } else if (!this.openView.classList.contains('hidden')) {
+                this.hideModal(this.newNotebookModal);
+                this.hideModal(this.saveNotebookModal);
+                this.hideModal(this.deleteNotebookModal);
+                this.notebookToDeleteId = null;
+                this.hideModal(this.deletePageModal);
+                this.pageToDeleteNotebookId = null;
+                if (!this.openView.classList.contains('hidden')) {
                     this.closeNotebook();
                 }
             }
@@ -247,19 +237,61 @@ export class UIController {
             this.themeToggleBtn.addEventListener('click', () => {
                 const isDark = document.body.classList.toggle('dark-theme');
                 localStorage.setItem('glass_theme', isDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
                 this.themeToggleBtn.innerHTML = isDark ? '<i class="ph ph-sun"></i>' : '<i class="ph ph-moon"></i>';
+
+                const newBaseColor = isDark ? '#ffffff' : '#1e293b';
+                this.textColor = newBaseColor;
+                this.brushColor = newBaseColor;
+                if (this.colorPicker) this.colorPicker.value = newBaseColor;
+                if (this.managers.left && this.managers.left.canvas) this.managers.left.canvas.setColor(newBaseColor);
+                if (this.managers.right && this.managers.right.canvas) this.managers.right.canvas.setColor(newBaseColor);
+
+                this.pageTextareaLeft.style.color = '';
+                this.pageTextareaRight.style.color = '';
+
+                this.adaptActiveNotebookTextColors(isDark);
             });
         }
+
+        const toggleSidebar = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (window.bootstrap && window.bootstrap.Offcanvas) {
+                const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(this.sidebar);
+                offcanvas.toggle();
+            } else {
+                this.sidebar.classList.toggle('show');
+            }
+        };
 
         if (this.mobileMenuBtn) {
-            this.mobileMenuBtn.addEventListener('click', () => {
-                this.sidebar.classList.toggle('show');
+            this.mobileMenuBtn.addEventListener('click', toggleSidebar);
+        }
+
+        const mobileMenuOpenBtn = document.getElementById('mobileMenuOpenBtn');
+        if (mobileMenuOpenBtn) {
+            mobileMenuOpenBtn.addEventListener('click', toggleSidebar);
+        }
+
+        const collapseSidebarBtn = document.getElementById('collapseSidebarBtn');
+        if (collapseSidebarBtn) {
+            collapseSidebarBtn.addEventListener('click', (e) => {
+                if (e) e.stopPropagation();
+                this.closeMobileSidebar();
             });
         }
 
-        // Alternar vistas
+        window.addEventListener('beforeunload', () => {
+            const isNotebookOpen = this.openView && !this.openView.classList.contains('hidden');
+            if (isNotebookOpen) {
+                this.saveCurrentOpenPage();
+            }
+        });
+
         this.activeNotebookCover.addEventListener('click', (e) => {
-            // Evitar abrir si se hace clic en los botones de la esquina o en el título
             if (e.target.closest('.top-corner-actions') || e.target.closest('.cover-title')) {
                 return;
             }
@@ -267,44 +299,23 @@ export class UIController {
         });
         this.closeNotebookBtn.addEventListener('click', () => this.closeNotebook());
 
-        // Cambiar imagen de portada
         this.changeCoverBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             this.coverImageInput.click();
         });
 
-        // Botón flotante para cerrar libretas (útil cuando la toolbar está oculta)
-        const floatingCloseBtn = document.getElementById('floatingCloseBtn');
-        if (floatingCloseBtn) {
-            floatingCloseBtn.addEventListener('click', () => {
-                const nb = this.nbManager.getActiveNotebook();
-                if (nb && nb.name === 'MANUAL') {
-                    // Seleccionar la primera libreta normal disponible si es el manual
-                    const firstNormal = this.nbManager.notebooks.find(n => n.name !== 'MANUAL');
-                    if (firstNormal) {
-                        this.nbManager.setActiveNotebook(firstNormal.id);
-                    }
-                }
-                this.closeNotebook();
-            });
-        }
-
-        // Evitar que el clic programático en el input propague el evento al contenedor de la libreta
         this.coverImageInput.addEventListener('click', (e) => {
             e.stopPropagation();
         });
 
-        // Cambiar el color del título
         this.titleColorInput.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evitar abrir libreta al elegir color
+            e.stopPropagation();
         });
 
-        // Evitar que el select abra la libreta
         this.titleFontSelect.addEventListener('click', (e) => {
             e.stopPropagation();
         });
 
-        // Cambiar fuente del título
         this.titleFontSelect.addEventListener('change', (e) => {
             const font = e.target.value;
             this.activeNotebookTitle.style.fontFamily = font;
@@ -317,17 +328,14 @@ export class UIController {
             this.nbManager.updateTitleColor(this.nbManager.activeNotebookId, color);
         });
 
-        // Evitar que el clic abra la libreta
         this.coverColorInput.addEventListener('click', (e) => {
             e.stopPropagation();
         });
 
-        // Cambiar color de fondo de portada
         this.coverColorInput.addEventListener('input', (e) => {
             const color = e.target.value;
             this.activeNotebookCover.style.setProperty('--cover-color', color);
 
-            // Si hay una imagen, la quitamos para que se pueda ver el color sólido elegido
             if (this.nbManager.getActiveNotebook().coverImage) {
                 this.activeNotebookCover.style.backgroundImage = 'none';
                 this.nbManager.updateCoverImage(this.nbManager.activeNotebookId, null);
@@ -349,14 +357,13 @@ export class UIController {
             }
         });
 
-        // Hacer editable el título de la libreta
         this.activeNotebookTitle.setAttribute('contenteditable', 'true');
         this.activeNotebookTitle.title = "Haz clic para editar el nombre";
 
         this.activeNotebookTitle.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                this.activeNotebookTitle.blur(); // Quita el foco y lanza el evento blur
+                this.activeNotebookTitle.blur();
             } else {
                 const allowKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
                 if (this.activeNotebookTitle.textContent.length >= 78 && !allowKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
@@ -380,22 +387,17 @@ export class UIController {
             this.nbManager.renameNotebook(this.nbManager.activeNotebookId, newName);
         });
 
-        // Herramientas de dibujo
         this.toolBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                // Remover clase active de todos
                 this.toolBtns.forEach(b => b.classList.remove('active'));
 
-                // Agregar clase active al clickeado
                 const targetBtn = e.currentTarget;
                 targetBtn.classList.add('active');
 
-                // Cambiar herramienta en ambos CanvasManager
                 const toolName = targetBtn.dataset.tool;
                 this.managers.left.canvas.setTool(toolName);
                 this.managers.right.canvas.setTool(toolName);
 
-                // Actualizar slider de grosor según la herramienta
                 const toolDefaults = { pen: 6, pencil: 2, crayon: 15, eraser: 20 };
                 if (this.lineWidthSlider && toolDefaults[toolName]) {
                     this.lineWidthSlider.value = toolDefaults[toolName];
@@ -403,17 +405,25 @@ export class UIController {
                     this.managers.right.canvas.setLineWidth(toolDefaults[toolName]);
                 }
 
-                // Actualizar color picker
                 if (this.colorPicker) {
                     this.colorPicker.value = (toolName === 'text') ? this.textColor : this.brushColor;
                 }
 
-                // Activar/desactivar capa de texto
-                if (toolName === 'text') {
+                if (toolName === 'text' || toolName === 'select') {
                     this.pageTextareaLeft.classList.add('active');
                     this.pageTextareaRight.classList.add('active');
-                    // Focus depending on mode
-                    this.pageTextareaRight.focus();
+                    const targetArea = (this.isTwoPageView && document.activeElement === this.pageTextareaLeft)
+                        ? this.pageTextareaLeft
+                        : this.pageTextareaRight;
+                    targetArea.focus();
+
+                    if (toolName === 'select') {
+                        const range = document.createRange();
+                        range.selectNodeContents(targetArea);
+                        const sel = window.getSelection();
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
                 } else {
                     this.pageTextareaLeft.classList.remove('active');
                     this.pageTextareaRight.classList.remove('active');
@@ -421,12 +431,10 @@ export class UIController {
             });
         });
 
-        // Alternar vista de 2 páginas
         if (this.toggleViewModeBtn) {
             this.toggleViewModeBtn.addEventListener('click', () => {
                 this.isTwoPageView = !this.isTwoPageView;
 
-                // Align active index to even number if switching to 2-page view
                 if (this.isTwoPageView && this.nbManager.activeNotebookId) {
                     const nb = this.nbManager.getActiveNotebook();
                     if (nb.activePageIndex % 2 !== 0) {
@@ -439,21 +447,18 @@ export class UIController {
             });
         }
 
-        // Rotar página (solo en modo 1 página)
         if (this.rotatePageBtn) {
             this.rotatePageBtn.addEventListener('click', () => {
                 if (this.isTwoPageView) return;
 
                 this.canvasContainerRight.classList.toggle('landscape-mode');
 
-                // Dar tiempo al navegador para aplicar los estilos antes de redimensionar
                 setTimeout(() => {
                     this.managers.right.canvas.resizeCanvas();
                 }, 50);
             });
         }
 
-        // --- Manejo de Imágenes ---
         this.insertImageBtn.addEventListener('click', () => {
             this.insertImageInput.click();
         });
@@ -462,14 +467,11 @@ export class UIController {
             const file = e.target.files[0];
             if (file) {
                 this.handleImageFile(file);
-                // Resetear input
                 this.insertImageInput.value = '';
             }
         });
 
-        // Pegar imagen (Ctrl+V)
         document.addEventListener('paste', (e) => {
-            // Solo actuar si la libreta está abierta
             if (!this.openView.classList.contains('hidden')) {
                 const items = (e.clipboardData || e.originalEvent.clipboardData).items;
                 let imagePasted = false;
@@ -483,8 +485,6 @@ export class UIController {
                     }
                 }
 
-                // Si pegamos una imagen, evitamos que se pegue como texto en línea
-                // y cambiamos automáticamente a la herramienta de selección para poder moverla.
                 if (imagePasted) {
                     e.preventDefault();
                     const selectBtn = document.querySelector('.tool-btn[data-tool="select"]');
@@ -492,8 +492,6 @@ export class UIController {
                         selectBtn.click();
                     }
                 } else {
-                    // Si no es imagen, interceptar el pegado de texto en áreas editables
-                    // para forzar que sea texto plano y no traiga fondos blancos o estilos.
                     if (document.activeElement && document.activeElement.isContentEditable) {
                         e.preventDefault();
                         const text = (e.clipboardData || window.clipboardData).getData('text/plain');
@@ -508,22 +506,20 @@ export class UIController {
         if (this.addStickyNoteBtn) {
             this.addStickyNoteBtn.addEventListener('click', () => {
                 if (!this.nbManager.activeNotebookId) return;
-                // We add to the right manager by default as it's the main focus
                 this.managers.right.sticky.spawnNoteOnPage();
 
-                // Switch to select tool so the user can drag it
                 const selectBtn = document.querySelector('.tool-btn[data-tool="select"]');
                 if (selectBtn) selectBtn.click();
             });
         }
 
-        // Guardar texto escrito
         this.pageTextareaLeft.addEventListener('input', (e) => {
             if (!this.nbManager.activeNotebookId) return;
             const nb = this.nbManager.getActiveNotebook();
             if (!nb) return;
             const leftIndex = this.isTwoPageView ? Math.floor(nb.activePageIndex / 2) * 2 : nb.activePageIndex;
             this.nbManager.updatePageText(nb.id, e.target.innerHTML, leftIndex);
+            this.checkAndHandleTextOverflow(this.pageTextareaLeft, true);
         });
 
         this.pageTextareaRight.addEventListener('input', (e) => {
@@ -533,13 +529,12 @@ export class UIController {
             const leftIndex = this.isTwoPageView ? Math.floor(nb.activePageIndex / 2) * 2 : nb.activePageIndex;
             const rightIndex = this.isTwoPageView ? leftIndex + 1 : leftIndex;
             this.nbManager.updatePageText(nb.id, e.target.innerHTML, rightIndex);
+            this.checkAndHandleTextOverflow(this.pageTextareaRight, false);
         });
 
-        // Botones de formato de texto
         const formatBtn = (id, command, value = null) => {
             const btn = document.getElementById(id);
             if (btn) {
-                // Prevenir que el botón robe el foco y se pierda la selección del texto
                 btn.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                 });
@@ -547,9 +542,19 @@ export class UIController {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
 
+                    this.pageTextareaLeft.classList.add('active');
+                    this.pageTextareaRight.classList.add('active');
+
+                    const textToolBtn = document.querySelector('.tool-btn[data-tool="text"]');
+                    if (textToolBtn && !textToolBtn.classList.contains('active')) {
+                        this.toolBtns.forEach(b => b.classList.remove('active'));
+                        textToolBtn.classList.add('active');
+                        this.managers.left.canvas.setTool('text');
+                        this.managers.right.canvas.setTool('text');
+                    }
+
                     document.execCommand(command, false, value);
 
-                    // Actualizar el estado guardado
                     if (this.nbManager.activeNotebookId) {
                         const nb = this.nbManager.getActiveNotebook();
                         if (nb) {
@@ -560,6 +565,12 @@ export class UIController {
                                 this.nbManager.updatePageText(nb.id, this.pageTextareaRight.innerHTML, rightIndex);
                             }
                         }
+                    }
+
+                    if (this.isTwoPageView && document.activeElement === this.pageTextareaLeft) {
+                        this.pageTextareaLeft.focus();
+                    } else {
+                        this.pageTextareaRight.focus();
                     }
                 });
             }
@@ -577,31 +588,53 @@ export class UIController {
         formatBtn('listBulletedBtn', 'insertUnorderedList');
         formatBtn('listNumberedBtn', 'insertOrderedList');
 
+        const pageContentRight = document.getElementById('pageContentRight');
+        if (pageContentRight) {
+            pageContentRight.addEventListener('click', (e) => {
+                if (e.target !== this.pageTextareaRight && !e.target.closest('.sticky-note') && !e.target.closest('.image-widget') && !e.target.closest('.widget-controls')) {
+                    const currentTool = this.managers.right.canvas.currentTool;
+                    if (currentTool === 'text' || !currentTool) {
+                        this.pageTextareaRight.classList.add('active');
+                        this.pageTextareaRight.focus();
+                    }
+                }
+            });
+        }
+
+        const pageContentLeft = document.getElementById('pageContentLeft');
+        if (pageContentLeft) {
+            pageContentLeft.addEventListener('click', (e) => {
+                if (e.target !== this.pageTextareaLeft && !e.target.closest('.sticky-note') && !e.target.closest('.image-widget') && !e.target.closest('.widget-controls')) {
+                    const currentTool = this.managers.left.canvas.currentTool;
+                    if (currentTool === 'text' || !currentTool) {
+                        this.pageTextareaLeft.classList.add('active');
+                        this.pageTextareaLeft.focus();
+                    }
+                }
+            });
+        }
+
         if (this.toggleHandwritingBtn) {
             this.toggleHandwritingBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.toggleHandwritingBtn.classList.toggle('active');
 
-                // Toggle mode in the container
                 if (this.twoPageWrapper) {
                     this.twoPageWrapper.classList.toggle('handwritten-mode');
                 }
             });
         }
 
-        // Ctrl + Z para deshacer dibujo
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'z') {
                 if (document.activeElement !== this.pageTextareaLeft && document.activeElement !== this.pageTextareaRight) {
                     e.preventDefault();
-                    // Attempt to undo on both? For simplicity just right page if 1 page, or both if 2 page
                     this.managers.right.canvas.undo();
                     if (this.isTwoPageView) this.managers.left.canvas.undo();
                 }
             }
         });
 
-        // Guardar dibujo cuando cambia
         this.managers.left.canvas.getCanvasElement().addEventListener('drawingChanged', (e) => {
             if (!this.nbManager.activeNotebookId) return;
             const nb = this.nbManager.getActiveNotebook();
@@ -621,23 +654,76 @@ export class UIController {
             }
         });
 
-        // Cambio de color
-        this.colorPicker.addEventListener('input', (e) => {
-            const color = e.target.value;
-            const currentTool = this.managers.left.canvas.currentTool;
-
-            if (currentTool === 'text') {
-                this.textColor = color;
-                this.pageTextareaLeft.style.color = color;
-                this.pageTextareaRight.style.color = color;
-            } else {
-                this.brushColor = color;
-                this.managers.left.canvas.setColor(color);
-                this.managers.right.canvas.setColor(color);
+        const trackTextSelection = () => {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                if (!range.collapsed) {
+                    const container = range.commonAncestorContainer;
+                    if ((this.pageTextareaRight && this.pageTextareaRight.contains(container)) ||
+                        (this.pageTextareaLeft && this.pageTextareaLeft.contains(container))) {
+                        this.savedTextRange = range.cloneRange();
+                    }
+                }
             }
-        });
+        };
 
-        // Cambio de grosor
+        document.addEventListener('selectionchange', trackTextSelection);
+
+        if (this.colorPicker) {
+            this.colorPicker.addEventListener('mousedown', trackTextSelection);
+            this.colorPicker.addEventListener('touchstart', trackTextSelection, { passive: true });
+
+            const handleColorPickerChange = (e) => {
+                const color = e.target.value;
+                const currentTool = this.managers.left.canvas.currentTool;
+
+                if (currentTool === 'text' || currentTool === 'select') {
+                    this.textColor = color;
+
+                    let hasAppliedToSelection = false;
+                    const sel = window.getSelection();
+
+                    if (this.savedTextRange && !this.savedTextRange.collapsed) {
+                        sel.removeAllRanges();
+                        sel.addRange(this.savedTextRange);
+                        document.execCommand('styleWithCSS', false, true);
+                        document.execCommand('foreColor', false, color);
+                        hasAppliedToSelection = true;
+                    } else if (sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed) {
+                        document.execCommand('styleWithCSS', false, true);
+                        document.execCommand('foreColor', false, color);
+                        hasAppliedToSelection = true;
+                    }
+
+                    if (hasAppliedToSelection) {
+                        if (!this.nbManager.activeNotebookId) return;
+                        const nb = this.nbManager.getActiveNotebook();
+                        if (nb && !nb.isReadOnly) {
+                            const leftIndex = this.isTwoPageView ? Math.floor(nb.activePageIndex / 2) * 2 : nb.activePageIndex;
+                            const rightIndex = this.isTwoPageView ? leftIndex + 1 : leftIndex;
+                            if (this.pageTextareaRight) {
+                                this.nbManager.updatePageText(nb.id, this.pageTextareaRight.innerHTML, rightIndex);
+                            }
+                            if (this.isTwoPageView && this.pageTextareaLeft) {
+                                this.nbManager.updatePageText(nb.id, this.pageTextareaLeft.innerHTML, leftIndex);
+                            }
+                        }
+                    } else {
+                        document.execCommand('styleWithCSS', false, true);
+                        document.execCommand('foreColor', false, color);
+                    }
+                } else {
+                    this.brushColor = color;
+                    this.managers.left.canvas.setColor(color);
+                    this.managers.right.canvas.setColor(color);
+                }
+            };
+
+            this.colorPicker.addEventListener('input', handleColorPickerChange);
+            this.colorPicker.addEventListener('change', handleColorPickerChange);
+        }
+
         if (this.lineWidthSlider) {
             this.lineWidthSlider.addEventListener('input', (e) => {
                 const width = parseInt(e.target.value);
@@ -646,7 +732,6 @@ export class UIController {
             });
         }
 
-        // Paginación
         this.prevPageBtn.addEventListener('click', () => {
             const nb = this.nbManager.getActiveNotebook();
             const step = this.isTwoPageView ? 2 : 1;
@@ -671,15 +756,15 @@ export class UIController {
 
         this.addPageBtn.addEventListener('click', () => {
             const nb = this.nbManager.getActiveNotebook();
-            if (nb && !nb.isReadOnly) {
-                this.nbManager.addPage(nb.id);
-                this.loadCurrentPage();
-            }
+            if (!nb || nb.isReadOnly) return;
+            this.nbManager.addPage(nb.id);
+            this.loadCurrentPage();
         });
 
         this.deletePageBtn.addEventListener('click', () => {
             const nb = this.nbManager.getActiveNotebook();
-            if (nb && !nb.isReadOnly && nb.pages.length > 1) {
+            if (!nb || nb.isReadOnly) return;
+            if (nb.pages.length > 1) {
                 const now = Date.now();
                 if (now - this.lastDeletionTime < 5 * 60 * 1000) {
                     try {
@@ -695,9 +780,9 @@ export class UIController {
                     }
                 } else {
                     this.pageToDeleteNotebookId = nb.id;
-                    this.deletePageModal.classList.remove('hidden');
+                    this.showModal(this.deletePageModal);
                 }
-            } else if (nb && nb.pages.length === 1) {
+            } else if (nb.pages.length === 1) {
                 alert('No puedes eliminar la única página de la libreta.');
             }
         });
@@ -746,22 +831,31 @@ export class UIController {
                         this.lastNotebookDeletionTime = Date.now();
                     } else {
                         this.notebookToDeleteId = nb.id;
-                        this.deleteNotebookModal.classList.remove('hidden');
+                        this.showModal(this.deleteNotebookModal);
                     }
                     return;
                 }
 
-                this.nbManager.setActiveNotebook(nb.id);
+                const isNotebookOpen = this.openView && !this.openView.classList.contains('hidden');
 
-                // Si es el manual, saltarse la portada y abrirlo directamente
-                if (nb.name === 'MANUAL') {
+                if (isNotebookOpen) {
+                    if (this.nbManager.activeNotebookId === nb.id) {
+                        this.closeMobileSidebar();
+                        return;
+                    }
+
+                    this.saveCurrentOpenPage();
+                    this.nbManager.setActiveNotebook(nb.id);
                     this.openNotebook();
+                } else {
+                    this.nbManager.setActiveNotebook(nb.id);
+
+                    if (nb.name === 'MANUAL') {
+                        this.openNotebook();
+                    }
                 }
 
-                // Cerrar menú en móviles si está abierto
-                if (this.sidebar && this.sidebar.classList.contains('show')) {
-                    this.sidebar.classList.remove('show');
-                }
+                this.closeMobileSidebar();
             });
 
             this.notebookListEl.appendChild(el);
@@ -801,14 +895,6 @@ export class UIController {
                 this.activeNotebookCover.appendChild(manualIcons);
             }
             manualIcons.innerHTML = `<h2 class="manual-empty-text">inicia tus apuntes creando una libreta</h2>`;
-
-            // Si es el manual, saltamos la vista de portada automáticamente
-            setTimeout(() => {
-                if (this.nbManager.activeNotebookId === notebook.id && !this.openView.classList.contains('hidden') === false) {
-                    this.openNotebook();
-                }
-            }, 50);
-
         } else {
             this.activeNotebookCover.classList.remove('manual-mode');
             this.activeNotebookTitle.style.display = 'block';
@@ -819,7 +905,6 @@ export class UIController {
             }
         }
 
-        // Bloquear edición si es read-only
         this.activeNotebookTitle.setAttribute('contenteditable', isReadonly ? 'false' : 'true');
         this.changeCoverBtn.style.display = isReadonly ? 'none' : 'block';
         const topActions = document.querySelector('.top-corner-actions');
@@ -830,13 +915,25 @@ export class UIController {
         this.coverView.classList.add('hidden');
         this.openView.classList.remove('hidden');
 
+        const activeBadge = document.getElementById('activeNotebookBadge');
+        if (activeBadge) {
+            const nb = this.nbManager.getActiveNotebook();
+            activeBadge.textContent = nb ? nb.name : 'Libreta';
+        }
+
+        if (window.innerWidth < 992 && window.bootstrap && window.bootstrap.Offcanvas) {
+            const offcanvas = bootstrap.Offcanvas.getInstance(this.sidebar);
+            if (offcanvas) offcanvas.hide();
+        }
+
         this.updateViewMode();
         this.loadCurrentPage();
 
-        // Asegurar que el canvas tome el tamaño correcto
-        this.managers.left.canvas.resizeCanvas();
-        this.managers.right.canvas.resizeCanvas();
-        // Seleccionar la herramienta de texto por defecto al entrar
+        setTimeout(() => {
+            this.managers.left.canvas.resizeCanvas();
+            this.managers.right.canvas.resizeCanvas();
+        }, 50);
+
         const textToolBtn = document.querySelector('.tool-btn[data-tool="text"]');
         if (textToolBtn) {
             textToolBtn.click();
@@ -849,18 +946,15 @@ export class UIController {
             this.twoPageWrapper.classList.remove('single-page-mode');
             if (this.toggleViewModeBtn) this.toggleViewModeBtn.classList.add('active');
 
-            // Hide rotate button and reset landscape mode in 2-page view
             if (this.rotatePageBtn) this.rotatePageBtn.style.display = 'none';
             if (this.canvasContainerRight.classList.contains('landscape-mode')) {
                 this.canvasContainerRight.classList.remove('landscape-mode');
-                // Wait for CSS reflow to resize canvas
                 setTimeout(() => this.managers.right.canvas.resizeCanvas(), 50);
             }
         } else {
             this.twoPageWrapper.classList.add('single-page-mode');
             if (this.toggleViewModeBtn) this.toggleViewModeBtn.classList.remove('active');
 
-            // Show rotate button in 1-page view
             if (this.rotatePageBtn) this.rotatePageBtn.style.display = 'inline-flex';
         }
     }
@@ -874,7 +968,6 @@ export class UIController {
             let rightIndex = nb.activePageIndex;
 
             if (this.isTwoPageView) {
-                // Force leftIndex to be even
                 leftIndex = Math.floor(nb.activePageIndex / 2) * 2;
                 rightIndex = leftIndex + 1;
             }
@@ -882,7 +975,6 @@ export class UIController {
             const leftPage = nb.pages[leftIndex];
             const rightPage = nb.pages[rightIndex];
 
-            // Cargar página izquierda (si existe y estamos en modo 2 páginas)
             if (this.isTwoPageView && leftPage) {
                 this.pageTextareaLeft.innerHTML = leftPage.pageText || '';
                 this.managers.left.canvas.clearCanvas(true);
@@ -905,10 +997,9 @@ export class UIController {
             }
 
             if (!this.isTwoPageView && this.canvasContainerLeft) {
-                this.canvasContainerLeft.style.visibility = 'visible'; // En modo 1 página esto se oculta vía CSS igual, pero lo dejamos visible
+                this.canvasContainerLeft.style.visibility = 'visible';
             }
 
-            // Cargar página derecha (siempre activa, es la única en modo 1 página)
             const targetRightPage = this.isTwoPageView ? rightPage : leftPage;
             const targetRightIndex = this.isTwoPageView ? rightIndex : leftIndex;
 
@@ -933,12 +1024,10 @@ export class UIController {
                 }
             }
 
-            // Ensure visibility is restored if we switch back to single page mode
             if (!this.isTwoPageView && this.canvasContainerRight) {
                 this.canvasContainerRight.style.visibility = 'visible';
             }
 
-            // Actualizar indicador de página
             if (this.isTwoPageView) {
                 const rightStr = rightIndex < nb.pages.length ? rightIndex + 1 : '-';
                 this.pageIndicator.textContent = `${leftIndex + 1}-${rightStr} / ${nb.pages.length}`;
@@ -946,15 +1035,19 @@ export class UIController {
                 this.pageIndicator.textContent = `${nb.activePageIndex + 1} / ${nb.pages.length}`;
             }
 
-            // Actualizar botones de paginación
             this.prevPageBtn.disabled = this.isTwoPageView ? leftIndex === 0 : nb.activePageIndex === 0;
             this.nextPageBtn.disabled = this.isTwoPageView ? rightIndex >= nb.pages.length - 1 : nb.activePageIndex === nb.pages.length - 1;
             this.prevPageBtn.style.opacity = this.prevPageBtn.disabled ? '0.5' : '1';
             this.nextPageBtn.style.opacity = this.nextPageBtn.disabled ? '0.5' : '1';
 
-            // Add/Delete page disabled for readonly
-            this.addPageBtn.style.display = isReadonly ? 'none' : 'inline-block';
-            this.deletePageBtn.style.display = isReadonly ? 'none' : 'inline-block';
+            if (this.addPageBtn) {
+                this.addPageBtn.classList.toggle('hidden', isReadonly);
+                this.addPageBtn.style.display = isReadonly ? 'none' : '';
+            }
+            if (this.deletePageBtn) {
+                this.deletePageBtn.classList.toggle('hidden', isReadonly);
+                this.deletePageBtn.style.display = isReadonly ? 'none' : '';
+            }
         } else {
             this.pageTextareaLeft.innerHTML = '';
             this.pageTextareaRight.innerHTML = '';
@@ -963,36 +1056,25 @@ export class UIController {
             this.managers.left.image.loadImages([]);
             this.managers.right.image.loadImages([]);
             this.pageIndicator.textContent = '1 / 1';
+            if (this.addPageBtn) this.addPageBtn.classList.add('hidden');
+            if (this.deletePageBtn) this.deletePageBtn.classList.add('hidden');
         }
 
         this.pageTextareaLeft.setAttribute('contenteditable', isReadonly ? 'false' : 'true');
         this.pageTextareaRight.setAttribute('contenteditable', isReadonly ? 'false' : 'true');
 
-        // Ocultar toolbar e interacciones si es read-only
         const toolbar = document.querySelector('.toolbar');
         if (toolbar) {
-            toolbar.style.display = isReadonly ? 'none' : '';
+            toolbar.classList.toggle('read-only', isReadonly);
         }
 
-        // Ocultar dispensador de notas si es de solo lectura
         const dispenserWrapper = document.getElementById('stickyDispenserWrapper');
         if (dispenserWrapper) {
             dispenserWrapper.style.display = isReadonly ? 'none' : 'flex';
         }
 
-        // Ocultar botón de cerrar si es el manual en la toolbar original
         if (this.closeNotebookBtn) {
-            this.closeNotebookBtn.style.display = (isReadonly && nb && nb.name === 'MANUAL') ? 'none' : 'flex';
-        }
-
-        // Mostrar botón de cerrado flotante solo si la libreta es de solo lectura (y la toolbar normal está oculta)
-        const floatingCloseBtn = document.getElementById('floatingCloseBtn');
-        if (floatingCloseBtn) {
-            if (isReadonly) {
-                floatingCloseBtn.classList.remove('hidden');
-            } else {
-                floatingCloseBtn.classList.add('hidden');
-            }
+            this.closeNotebookBtn.style.display = 'inline-flex';
         }
 
         this.managers.left.canvas.isReadOnly = isReadonly;
@@ -1003,29 +1085,456 @@ export class UIController {
         this.managers.right.sticky.isReadOnly = isReadonly;
     }
 
+    saveCurrentOpenPage() {
+        if (!this.nbManager.activeNotebookId) return;
+        const nb = this.nbManager.getActiveNotebook();
+        if (!nb || nb.isReadOnly) return;
+
+        const leftIndex = this.isTwoPageView ? Math.floor(nb.activePageIndex / 2) * 2 : nb.activePageIndex;
+        const rightIndex = this.isTwoPageView ? leftIndex + 1 : leftIndex;
+
+        if (this.pageTextareaRight) {
+            this.nbManager.updatePageText(nb.id, this.pageTextareaRight.innerHTML, rightIndex);
+        }
+        if (this.isTwoPageView && this.pageTextareaLeft) {
+            this.nbManager.updatePageText(nb.id, this.pageTextareaLeft.innerHTML, leftIndex);
+        }
+
+        if (this.managers.right && this.managers.right.canvas) {
+            const rightData = this.managers.right.canvas.getCanvasElement().toDataURL();
+            this.nbManager.updatePageDrawing(nb.id, rightData, rightIndex);
+        }
+        if (this.isTwoPageView && this.managers.left && this.managers.left.canvas) {
+            const leftData = this.managers.left.canvas.getCanvasElement().toDataURL();
+            this.nbManager.updatePageDrawing(nb.id, leftData, leftIndex);
+        }
+
+        this.nbManager.saveNotebooks();
+    }
+
+    closeMobileSidebar() {
+        if (this.sidebar && this.sidebar.classList.contains('show')) {
+            this.sidebar.classList.remove('show');
+        }
+        if (window.bootstrap && window.bootstrap.Offcanvas) {
+            const offcanvas = bootstrap.Offcanvas.getInstance(this.sidebar);
+            if (offcanvas) offcanvas.hide();
+        }
+    }
+
     closeNotebook() {
+        this.saveCurrentOpenPage();
+        const nb = this.nbManager.getActiveNotebook();
+        if (nb && nb.isReadOnly) {
+            const firstNormal = this.nbManager.notebooks.find(n => !n.isReadOnly);
+            if (firstNormal) {
+                this.nbManager.setActiveNotebook(firstNormal.id);
+            }
+        }
         this.openView.classList.add('hidden');
         this.coverView.classList.remove('hidden');
     }
 
-    showModal() {
-        this.newNotebookNameInput.value = '';
-        this.newNotebookModal.classList.remove('hidden');
-        this.newNotebookNameInput.focus();
+    showModal(modalEl = this.newNotebookModal) {
+        if (!modalEl) return;
+        if (modalEl === this.newNotebookModal) {
+            this.newNotebookNameInput.value = '';
+        }
+        if (window.bootstrap && window.bootstrap.Modal) {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        } else {
+            modalEl.classList.remove('hidden');
+        }
+        if (modalEl === this.newNotebookModal) {
+            setTimeout(() => this.newNotebookNameInput.focus(), 200);
+        }
     }
 
-    hideModal() {
-        this.newNotebookModal.classList.add('hidden');
+    hideModal(modalEl = this.newNotebookModal) {
+        if (!modalEl) return;
+        if (window.bootstrap && window.bootstrap.Modal) {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) {
+                modal.hide();
+            } else {
+                modalEl.classList.add('hidden');
+            }
+        } else {
+            modalEl.classList.add('hidden');
+        }
     }
 
-    // Función auxiliar para procesar el archivo de imagen e insertarlo
     handleImageFile(file) {
         const reader = new FileReader();
         reader.onload = (event) => {
-            // Aquí podríamos implementar compresión usando un canvas temporal si el archivo es muy grande
-            // Para simplificar, lo pasamos directamente
             this.managers.right.image.addImage(event.target.result);
         };
         reader.readAsDataURL(file);
+    }
+
+    setCaretToEnd(el) {
+        if (!el) return;
+        el.focus();
+        try {
+            let targetNode = el;
+            while (targetNode.lastChild) {
+                targetNode = targetNode.lastChild;
+            }
+
+            const range = document.createRange();
+            if (targetNode.nodeType === Node.TEXT_NODE) {
+                const offset = targetNode.textContent.length;
+                range.setStart(targetNode, offset);
+                range.setEnd(targetNode, offset);
+            } else {
+                range.selectNodeContents(targetNode);
+                range.collapse(false);
+            }
+
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } catch (e) {
+            console.warn('Error setting caret to end:', e);
+        }
+    }
+
+    splitTextNodeAtBoundary(textNode, boundaryBottom) {
+        const text = textNode.textContent || '';
+        if (!text) return null;
+
+        const range = document.createRange();
+        let low = 0;
+        let high = text.length;
+        let best = -1;
+
+        while (low <= high) {
+            const mid = Math.floor((low + high) / 2);
+            try {
+                if (textNode.nodeType === Node.TEXT_NODE) {
+                    range.setStart(textNode, 0);
+                    range.setEnd(textNode, mid);
+                } else if (textNode.firstChild && textNode.firstChild.nodeType === Node.TEXT_NODE) {
+                    range.setStart(textNode.firstChild, 0);
+                    range.setEnd(textNode.firstChild, mid);
+                } else {
+                    break;
+                }
+                const rects = range.getClientRects();
+                if (rects.length > 0) {
+                    const lastRect = rects[rects.length - 1];
+                    if (lastRect.bottom <= boundaryBottom) {
+                        best = mid;
+                        low = mid + 1;
+                    } else {
+                        high = mid - 1;
+                    }
+                } else {
+                    low = mid + 1;
+                }
+            } catch (err) {
+                break;
+            }
+        }
+
+        if (best <= 0) {
+            return { stayText: '', moveText: text };
+        }
+
+        let finalSplit = best;
+        const lastSpace = text.lastIndexOf(' ', best);
+        if (lastSpace > 0 && best - lastSpace < 30) {
+            finalSplit = lastSpace + 1;
+        }
+
+        return {
+            stayText: text.slice(0, finalSplit),
+            moveText: text.slice(finalSplit)
+        };
+    }
+
+    checkAndHandleTextOverflow(textarea, isLeftPage = false, depth = 0) {
+        if (depth > 20) return;
+        if (this.isAutoPaging && depth === 0) return;
+        if (!this.nbManager.activeNotebookId) return;
+        const nb = this.nbManager.getActiveNotebook();
+        if (!nb || nb.isReadOnly) return;
+
+        const tolerance = 2;
+        if (textarea.scrollHeight - textarea.clientHeight <= tolerance) {
+            return;
+        }
+
+        if (depth === 0) {
+            this.isAutoPaging = true;
+        }
+
+        try {
+            const containerRect = textarea.getBoundingClientRect();
+            const containerBottom = containerRect.bottom - tolerance;
+
+            const overflowFragment = document.createDocumentFragment();
+            const childNodes = Array.from(textarea.childNodes);
+
+            if (childNodes.length === 0) return;
+
+            for (let i = 0; i < childNodes.length; i++) {
+                const child = childNodes[i];
+                let childTop = 0;
+                let childBottom = 0;
+
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    const r = child.getBoundingClientRect();
+                    childTop = r.top;
+                    childBottom = r.bottom;
+                } else if (child.nodeType === Node.TEXT_NODE) {
+                    const range = document.createRange();
+                    range.selectNodeContents(child);
+                    const r = range.getBoundingClientRect();
+                    childTop = r.top;
+                    childBottom = r.bottom;
+                }
+
+                if (childBottom <= containerBottom) {
+                    continue;
+                }
+
+                if (childTop >= containerBottom - 4) {
+                    for (let j = i; j < childNodes.length; j++) {
+                        overflowFragment.appendChild(childNodes[j]);
+                    }
+                    break;
+                }
+
+                if (child.nodeType === Node.ELEMENT_NODE && child.textContent.length > 0) {
+                    const textNode = child.firstChild;
+                    if (textNode && textNode.nodeType === Node.TEXT_NODE && child.childNodes.length === 1) {
+                        const splitData = this.splitTextNodeAtBoundary(textNode, containerBottom);
+                        if (splitData && splitData.moveText) {
+                            child.textContent = splitData.stayText.trimEnd();
+                            if (!splitData.stayText.trim()) {
+                                child.remove();
+                            }
+                            const nextElem = document.createElement(child.tagName);
+                            nextElem.className = child.className;
+                            nextElem.textContent = splitData.moveText.trimStart();
+                            overflowFragment.appendChild(nextElem);
+
+                            for (let j = i + 1; j < childNodes.length; j++) {
+                                overflowFragment.appendChild(childNodes[j]);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                for (let j = i; j < childNodes.length; j++) {
+                    overflowFragment.appendChild(childNodes[j]);
+                }
+                break;
+            }
+
+            while (textarea.childNodes.length > 1 && textarea.scrollHeight - textarea.clientHeight > tolerance) {
+                const last = textarea.lastChild;
+                overflowFragment.insertBefore(last, overflowFragment.firstChild);
+            }
+
+            if (textarea.childNodes.length === 1 && textarea.scrollHeight - textarea.clientHeight > tolerance) {
+                const onlyChild = textarea.firstChild;
+                if (onlyChild.nodeType === Node.ELEMENT_NODE && onlyChild.textContent) {
+                    const splitData = this.splitTextNodeAtBoundary(onlyChild, containerBottom);
+                    if (splitData && splitData.moveText) {
+                        onlyChild.textContent = splitData.stayText.trimEnd();
+                        const nextElem = document.createElement(onlyChild.tagName);
+                        nextElem.className = onlyChild.className;
+                        nextElem.textContent = splitData.moveText.trimStart();
+                        overflowFragment.insertBefore(nextElem, overflowFragment.firstChild);
+                    }
+                }
+            }
+
+            const tempDiv = document.createElement('div');
+            tempDiv.appendChild(overflowFragment);
+            let overflowHtml = tempDiv.innerHTML.trim();
+
+            if (!overflowHtml) {
+                overflowHtml = '<p><br></p>';
+            }
+
+            this.transferOverflowToNextPage(nb, textarea, overflowHtml, isLeftPage, depth);
+
+        } catch (err) {
+            console.error('Error during auto page overflow:', err);
+        } finally {
+            if (depth === 0) {
+                this.isAutoPaging = false;
+            }
+        }
+    }
+
+    transferOverflowToNextPage(nb, currentTextarea, overflowHtml, isLeftPage, depth = 0) {
+        if (this.isTwoPageView) {
+            const leftIndex = Math.floor(nb.activePageIndex / 2) * 2;
+            const rightIndex = leftIndex + 1;
+
+            if (isLeftPage) {
+                this.nbManager.updatePageText(nb.id, currentTextarea.innerHTML, leftIndex);
+
+                if (rightIndex >= nb.pages.length) {
+                    nb.pages.push({
+                        pageText: '',
+                        pageDrawing: null,
+                        pageImages: [],
+                        pageNotes: []
+                    });
+                }
+
+                const existingRightText = nb.pages[rightIndex].pageText || '';
+                const combinedText = existingRightText ? (overflowHtml + '<br>' + existingRightText) : overflowHtml;
+                nb.pages[rightIndex].pageText = combinedText;
+                this.nbManager.saveNotebooks();
+
+                this.pageTextareaRight.innerHTML = combinedText;
+                if (this.canvasContainerRight) {
+                    this.canvasContainerRight.style.visibility = 'visible';
+                }
+                this.updateViewMode();
+                this.pageIndicator.textContent = `${leftIndex + 1}-${rightIndex + 1} / ${nb.pages.length}`;
+                this.nextPageBtn.disabled = rightIndex >= nb.pages.length - 1;
+                this.nextPageBtn.style.opacity = this.nextPageBtn.disabled ? '0.5' : '1';
+
+                this.pageTextareaRight.classList.add('active');
+                this.setCaretToEnd(this.pageTextareaRight);
+                setTimeout(() => {
+                    this.setCaretToEnd(this.pageTextareaRight);
+                }, 10);
+
+                if (this.pageTextareaRight.scrollHeight - this.pageTextareaRight.clientHeight > 2 && depth < 20) {
+                    this.checkAndHandleTextOverflow(this.pageTextareaRight, false, depth + 1);
+                }
+            } else {
+                this.saveCurrentOpenPage();
+
+                const newLeftIndex = rightIndex + 1;
+                if (newLeftIndex >= nb.pages.length) {
+                    this.nbManager.addPage(nb.id);
+                } else {
+                    nb.pages.splice(newLeftIndex, 0, {
+                        pageText: '',
+                        pageDrawing: null,
+                        pageImages: [],
+                        pageNotes: []
+                    });
+                    nb.activePageIndex = newLeftIndex;
+                }
+
+                nb.pages[newLeftIndex].pageText = overflowHtml;
+                nb.activePageIndex = newLeftIndex;
+                this.nbManager.saveNotebooks();
+
+                this.loadCurrentPage();
+                this.pageTextareaLeft.classList.add('active');
+                this.setCaretToEnd(this.pageTextareaLeft);
+                setTimeout(() => {
+                    this.setCaretToEnd(this.pageTextareaLeft);
+                }, 10);
+
+                if (this.pageTextareaLeft.scrollHeight - this.pageTextareaLeft.clientHeight > 2 && depth < 20) {
+                    this.checkAndHandleTextOverflow(this.pageTextareaLeft, true, depth + 1);
+                }
+            }
+        } else {
+            this.saveCurrentOpenPage();
+
+            const currentIndex = nb.activePageIndex;
+            const nextIndex = currentIndex + 1;
+            if (nextIndex >= nb.pages.length) {
+                this.nbManager.addPage(nb.id);
+            } else {
+                nb.pages.splice(nextIndex, 0, {
+                    pageText: '',
+                    pageDrawing: null,
+                    pageImages: [],
+                    pageNotes: []
+                });
+                nb.activePageIndex = nextIndex;
+            }
+
+            nb.pages[nextIndex].pageText = overflowHtml;
+            nb.activePageIndex = nextIndex;
+            this.nbManager.saveNotebooks();
+
+            this.loadCurrentPage();
+            this.pageTextareaRight.classList.add('active');
+            this.setCaretToEnd(this.pageTextareaRight);
+            setTimeout(() => {
+                this.setCaretToEnd(this.pageTextareaRight);
+            }, 10);
+
+            if (this.pageTextareaRight.scrollHeight - this.pageTextareaRight.clientHeight > 2 && depth < 20) {
+                this.checkAndHandleTextOverflow(this.pageTextareaRight, false, depth + 1);
+            }
+        }
+    }
+
+    adaptActiveNotebookTextColors(isDark) {
+        if (!this.nbManager.activeNotebookId) return;
+        const nb = this.nbManager.getActiveNotebook();
+        if (!nb) return;
+
+        const darkBases = [
+            'rgb(255, 255, 255)', '#ffffff', '#fff',
+            'rgb(248, 250, 252)', '#f8fafc',
+            'rgb(240, 243, 250)', '#f0f3fa'
+        ];
+        const lightBases = [
+            'rgb(30, 41, 59)', '#1e293b',
+            'rgb(34, 34, 34)', '#222222',
+            'rgb(0, 0, 0)', '#000000', '#000',
+            'rgb(75, 100, 140)', '#4b648c'
+        ];
+
+        const targetOldBases = isDark ? lightBases : darkBases;
+        const newBase = isDark ? '#f8fafc' : '#1e293b';
+
+        const adaptHtml = (html) => {
+            if (!html) return html;
+            const div = document.createElement('div');
+            div.innerHTML = html;
+
+            const colored = div.querySelectorAll('[style*="color"], font[color]');
+            colored.forEach(el => {
+                if (el.tagName === 'FONT' && el.getAttribute('color')) {
+                    const c = el.getAttribute('color').toLowerCase().trim();
+                    if (targetOldBases.includes(c)) {
+                        el.setAttribute('color', newBase);
+                    }
+                }
+                if (el.style && el.style.color) {
+                    const c = el.style.color.toLowerCase().trim();
+                    if (targetOldBases.some(base => base.toLowerCase() === c || c === base.toLowerCase())) {
+                        el.style.color = newBase;
+                    }
+                }
+            });
+            return div.innerHTML;
+        };
+
+        if (this.pageTextareaRight) {
+            this.pageTextareaRight.innerHTML = adaptHtml(this.pageTextareaRight.innerHTML);
+        }
+        if (this.isTwoPageView && this.pageTextareaLeft) {
+            this.pageTextareaLeft.innerHTML = adaptHtml(this.pageTextareaLeft.innerHTML);
+        }
+
+        if (!nb.isReadOnly) {
+            nb.pages.forEach(p => {
+                if (p.pageText) {
+                    p.pageText = adaptHtml(p.pageText);
+                }
+            });
+            this.nbManager.saveNotebooks();
+        }
     }
 }

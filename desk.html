@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Notebook - Escritorio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Oswald:wght@400;600&family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/stickyNotes.css">
+</head>
+
+<body class="dark-theme">
+    <div id="brushCursor" class="brush-cursor"></div>
+
+    <div class="app-container d-flex vh-100 vw-100 overflow-hidden">
+        <aside class="sidebar offcanvas-lg offcanvas-start glass-panel" tabindex="-1" id="sidebarOffcanvas"
+            aria-labelledby="sidebarOffcanvasLabel">
+            <div class="sidebar-header w-100">
+                <div class="d-flex justify-content-between align-items-center w-100 d-lg-none pb-2 mb-2 border-bottom border-secondary-subtle">
+                    <span class="fs-6 fw-bold text-secondary">Mis Libretas</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 d-flex align-items-center gap-1"
+                        id="collapseSidebarBtn" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Plegar Menú">
+                        <i class="ph-bold ph-caret-left"></i> Plegar
+                    </button>
+                </div>
+                <h1 class="sidebar-brand" id="sidebarOffcanvasLabel">VR Notebook</h1>
+                <div class="sidebar-tools">
+                    <button id="themeToggleBtn" class="icon-btn custom-tooltip" data-tooltip="Tema">
+                        <i class="ph ph-moon"></i>
+                    </button>
+                    <button id="saveToPcBtn" class="icon-btn custom-tooltip" data-tooltip="Guardar">
+                        <i class="ph ph-floppy-disk"></i>
+                    </button>
+                    <button id="importFromPcBtn" class="icon-btn custom-tooltip" data-tooltip="Importar">
+                        <i class="ph ph-folder-open"></i>
+                    </button>
+                    <button id="addManualBtn" class="icon-btn custom-tooltip" data-tooltip="Acerca">
+                        <i class="ph ph-question"></i>
+                    </button>
+                    <button id="addNotebookBtn" class="icon-btn custom-tooltip" data-tooltip="Crear">
+                        <i class="ph ph-plus"></i>
+                    </button>
+                </div>
+                <h3 class="sidebar-title">Mis Libretas</h3>
+            </div>
+            <div class="notebook-list w-100" id="notebookList"></div>
+            
+            <div class="sidebar-footer w-100">
+                <p>Desarrollado por saul (SolyX) para la comunidad de software libre.</p>
+            </div>
+        </aside>
+
+        <main class="main-content flex-grow-1 position-relative h-100 overflow-hidden d-flex flex-column">
+            <section class="cover-view w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3 position-relative" id="coverView">
+                <button id="mobileMenuBtn" class="mobile-menu-btn glass-panel d-lg-none" title="Abrir Menú">
+                    <i class="ph-bold ph-list"></i>
+                </button>
+                <div class="notebook-cover-wrapper">
+                    <div class="notebook-cover" id="activeNotebookCover" style="--cover-color: #0b5394;">
+                        <div class="notebook-spine"></div>
+                        <div class="top-corner-actions">
+                            <select id="titleFontSelect" class="icon-btn custom-tooltip" data-tooltip="Fuente del Título"
+                                style="width: auto; padding: 2px 8px; font-size: 0.9rem; font-family: inherit; border-radius: 10px; margin-right: 5px; outline: none; -webkit-appearance: none; appearance: none; background: rgba(0,0,0,0.2);">
+                                <option value="'Outfit', sans-serif" style="color: black;">Outfit</option>
+                                <option value="'Caveat', cursive" style="color: black;">Caveat</option>
+                                <option value="'Playfair Display', serif" style="color: black;">Playfair</option>
+                                <option value="'Oswald', sans-serif" style="color: black;">Oswald</option>
+                            </select>
+                            <label class="icon-btn custom-tooltip" data-tooltip="Color del Título"
+                                style="position: relative; cursor: pointer; display: flex;">
+                                <i class="ph ph-palette"></i>
+                                <input type="color" id="titleColorInput"
+                                    style="opacity: 0; position: absolute; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer;">
+                            </label>
+                            <label class="icon-btn custom-tooltip" data-tooltip="Color de Portada"
+                                style="position: relative; cursor: pointer; display: flex;">
+                                <i class="ph ph-paint-roller"></i>
+                                <input type="color" id="coverColorInput"
+                                    style="opacity: 0; position: absolute; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer;">
+                            </label>
+                            <button class="icon-btn custom-tooltip" data-tooltip="Imagen de Portada" id="changeCoverBtn">
+                                <i class="ph ph-image"></i>
+                            </button>
+                        </div>
+                        <h1 class="cover-title text-center px-3" id="activeNotebookTitle">My Notebook</h1>
+                        <input type="file" id="coverImageInput" accept="image/*" class="hidden">
+                    </div>
+                </div>
+            </section>
+
+            <section class="open-view hidden w-100 h-100" id="openView">
+                <header class="toolbar glass-panel w-100 d-flex align-items-center justify-content-between px-2 px-md-3 py-1" id="mainToolbar">
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <button id="mobileMenuOpenBtn" class="mobile-nav-toggle btn btn-sm d-lg-none p-1" title="Mis Libretas">
+                            <i class="ph-bold ph-list fs-5"></i>
+                        </button>
+                        <button class="btn-close-notebook" id="closeNotebookBtn" title="Cerrar libreta y volver a portadas">
+                            <i class="ph-bold ph-arrow-left"></i>
+                            <span class="d-none d-sm-inline ms-1">Cerrar</span>
+                        </button>
+                        <span class="active-notebook-badge d-none d-md-inline-block text-truncate" id="activeNotebookBadge" style="max-width: 140px;">Libreta</span>
+                    </div>
+
+                    <div class="toolbar-tools-scrollable d-flex align-items-center gap-2 px-1">
+                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Herramientas Principales">
+                            <button class="tool-btn active btn" data-tool="text" title="Texto">
+                                <i class="ph-fill ph-text-t"></i>
+                                <span class="tool-label">Texto</span>
+                            </button>
+                            <button class="tool-btn btn" data-tool="pen" title="Plumón">
+                                <i class="ph-fill ph-marker-circle"></i>
+                            </button>
+                            <button class="tool-btn btn" data-tool="eraser" title="Borrador">
+                                <i class="ph-fill ph-eraser"></i>
+                            </button>
+                            <button class="tool-btn btn" data-tool="select" title="Seleccionar">
+                                <i class="ph ph-cursor"></i>
+                            </button>
+                        </div>
+
+                        <div class="toolbar-divider vr opacity-25"></div>
+
+                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Formato de Texto">
+                            <button class="tool-btn action-btn btn" id="formatTitleBtn" title="Título (H1)">
+                                <i class="ph-bold ph-text-h-one"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="formatSubBtn" title="Subtítulo (H2)">
+                                <i class="ph-bold ph-text-h-two"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="formatNormalBtn" title="Texto Normal">
+                                <i class="ph-bold ph-text-t"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="toggleHandwritingBtn" title="Fuente Manuscrita">
+                                <i class="ph-bold ph-signature"></i>
+                            </button>
+                        </div>
+
+                        <div class="toolbar-divider vr opacity-25"></div>
+
+                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Alineación y Listas">
+                            <button class="tool-btn action-btn btn" id="justifyLeftBtn" title="Alinear a la izquierda">
+                                <i class="ph-bold ph-text-align-left"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="justifyCenterBtn" title="Centrar">
+                                <i class="ph-bold ph-text-align-center"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="justifyRightBtn" title="Alinear a la derecha">
+                                <i class="ph-bold ph-text-align-right"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="justifyFullBtn" title="Justificar">
+                                <i class="ph-bold ph-text-align-justify"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="listBulletedBtn" title="Viñetas">
+                                <i class="ph-bold ph-list-bullets"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="listNumberedBtn" title="Lista numerada">
+                                <i class="ph-bold ph-list-numbers"></i>
+                            </button>
+                        </div>
+
+                        <div class="toolbar-divider vr opacity-25"></div>
+
+                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Inserciones">
+                            <input type="file" id="insertImageInput" accept="image/*" class="hidden">
+                            <button class="tool-btn action-btn btn" id="insertImageBtn" title="Insertar Imagen">
+                                <i class="ph-fill ph-image-square"></i>
+                            </button>
+                            <button class="tool-btn action-btn btn" id="addStickyNoteBtn" title="Añadir Nota Adhesiva">
+                                <i class="ph-fill ph-note"></i>
+                            </button>
+                            <button class="tool-btn btn d-none d-md-inline-flex" id="toggleViewModeBtn" title="Vista de 2 Páginas">
+                                <i class="ph ph-book-open"></i>
+                            </button>
+                            <button class="tool-btn btn" id="rotatePageBtn" title="Rotar Libreta (Horizontal)">
+                                <i class="ph ph-arrows-clockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                        <div class="tools-group pagination-tools d-flex align-items-center gap-1 flex-shrink-0">
+                            <button class="tool-btn btn btn-sm" id="prevPageBtn" title="Página Anterior">
+                                <i class="ph ph-caret-left"></i>
+                            </button>
+                            <span id="pageIndicator" class="px-1 fw-medium"
+                                style="font-family: 'Outfit'; font-size: 0.85rem; min-width: 36px; text-align: center; color: var(--text-primary);">1/1</span>
+                            <button class="tool-btn btn btn-sm" id="nextPageBtn" title="Página Siguiente">
+                                <i class="ph ph-caret-right"></i>
+                            </button>
+                            <button class="tool-btn btn btn-sm" id="addPageBtn" title="Añadir Página">
+                                <i class="ph ph-plus"></i>
+                            </button>
+                            <button class="tool-btn btn btn-sm" id="deletePageBtn" title="Eliminar Página">
+                                <i class="ph ph-minus"></i>
+                            </button>
+                        </div>
+
+                        <div class="toolbar-divider vr opacity-25 d-none d-sm-block"></div>
+
+                        <div class="tools-group size-tools d-none d-md-flex align-items-center gap-1 flex-shrink-0">
+                            <i class="ph ph-line-segments" title="Grosor de línea" style="color: var(--text-primary); font-size: 1.1rem;"></i>
+                            <input type="range" id="lineWidthSlider" min="1" max="50" value="6" class="line-width-slider form-range" title="Grosor de la línea" style="width: 65px; accent-color: var(--primary-color);">
+                        </div>
+
+                        <div class="tools-group color-tools d-flex align-items-center flex-shrink-0">
+                            <input type="color" id="colorPicker" value="#222222" title="Color" class="color-picker-input form-control-color">
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="canvas-scroll-wrapper flex-grow-1 w-100 d-flex justify-content-center overflow-auto">
+                    <div class="two-page-wrapper single-page-mode" id="twoPageWrapper">
+                        <div class="canvas-container left-page" id="canvasContainerLeft">
+                            <div class="page-content" id="pageContentLeft">
+                                <div id="imageLayerLeft"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none;">
+                                </div>
+                                <canvas id="drawingCanvasLeft"></canvas>
+                                <div id="pageTextareaLeft" class="page-textarea active" contenteditable="true" spellcheck="false"
+                                    placeholder="Escribe aquí..."></div>
+                            </div>
+                        </div>
+                        
+                        <div class="canvas-container right-page" id="canvasContainerRight">
+                            <div class="page-content" id="pageContentRight">
+                                <div id="imageLayerRight"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none;">
+                                </div>
+                                <canvas id="drawingCanvasRight"></canvas>
+                                <div id="pageTextareaRight" class="page-textarea active" contenteditable="true" spellcheck="false"
+                                    placeholder="Escribe aquí..."></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal fade" id="newNotebookModal" tabindex="-1" aria-labelledby="newNotebookModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-panel border-0 p-4">
+                <h3 id="newNotebookModalLabel" class="text-center mb-3">Nueva Libreta</h3>
+                <div class="mb-3">
+                    <input type="text" id="newNotebookName" placeholder="Nombre de la libreta" class="glass-input form-control bg-transparent text-body" maxlength="50">
+                </div>
+                <div class="color-selection d-flex justify-content-between align-items-center mb-3">
+                    <label for="newNotebookColor" class="mb-0 text-secondary">Color de portada:</label>
+                    <input type="color" id="newNotebookColor" value="#0b5394" class="color-picker-input form-control-color">
+                </div>
+                <div class="modal-actions d-flex justify-content-center gap-2 mt-2">
+                    <button class="glass-btn outline" id="cancelNewNotebookBtn" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="glass-btn" id="confirmNewNotebookBtn">Crear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deleteNotebookModal" tabindex="-1" aria-labelledby="deleteNotebookModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content glass-panel border-0 p-4 text-center">
+                <div class="text-danger mb-3" style="font-size: 3rem;">
+                    <i class="ph-fill ph-warning-circle"></i>
+                </div>
+                <h3 id="deleteNotebookModalLabel" class="mb-3">Eliminar Libreta</h3>
+                <p class="text-secondary mb-4" style="font-size: 0.95rem;">
+                    ¿Estás seguro de que deseas eliminar esta libreta? Esta acción no se puede deshacer.
+                </p>
+                <div class="modal-actions d-flex justify-content-center gap-3">
+                    <button class="glass-btn outline" id="cancelDeleteNotebookBtn" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="glass-btn" id="confirmDeleteNotebookBtn" style="background: rgba(255, 77, 77, 0.2); border-color: rgba(255, 77, 77, 0.4); color: #ff4d4d;">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="deletePageModal" tabindex="-1" aria-labelledby="deletePageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+            <div class="modal-content glass-panel border-0 p-4 text-center">
+                <div class="text-danger mb-3" style="font-size: 3rem;">
+                    <i class="ph-fill ph-warning-circle"></i>
+                </div>
+                <h3 id="deletePageModalLabel" class="mb-3">Eliminar Página</h3>
+                <p class="text-secondary mb-4" style="font-size: 0.95rem;">
+                    ¿Estás seguro de que deseas eliminar esta página? Esta acción no se puede deshacer.
+                </p>
+                <div class="modal-actions d-flex justify-content-center gap-3">
+                    <button class="glass-btn outline" id="cancelDeletePageBtn" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="glass-btn" id="confirmDeletePageBtn" style="background: rgba(255, 77, 77, 0.2); border-color: rgba(255, 77, 77, 0.4); color: #ff4d4d;">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="saveNotebookModal" tabindex="-1" aria-labelledby="saveNotebookModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+            <div class="modal-content glass-panel border-0 p-4">
+                <h3 id="saveNotebookModalLabel" class="mb-3 text-center d-flex align-items-center justify-content-center gap-2">
+                    Guardar Información
+                </h3>
+                <p class="text-secondary text-center mb-3" style="font-size: 0.95rem; line-height: 1.6;">
+                    Por seguridad, tu navegador no permite guardar archivos en carpetas principales.<br><b>Por favor, crea una carpeta nueva para guardarla</b>. Aquí tienes unos ejemplos:
+                </p>
+                
+                <div class="rounded-3 p-3 mb-2 text-center" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="text-secondary small mb-1 d-flex align-items-center justify-content-center gap-1">
+                        <i class="ph-fill ph-windows-logo"></i> En Windows:
+                    </div>
+                    <code class="d-block text-break" style="font-family: monospace; font-size: 0.85rem; color: var(--text-color); opacity: 0.9;">C:\Users\TuUsuario\Documentos\vr-notebook</code>
+                </div>
+                
+                <div class="rounded-3 p-3 mb-4 text-center" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <div class="text-secondary small mb-1 d-flex align-items-center justify-content-center gap-1">
+                        <i class="ph-fill ph-apple-logo"></i> En Mac:
+                    </div>
+                    <code class="d-block text-break" style="font-family: monospace; font-size: 0.85rem; color: var(--text-color); opacity: 0.9;">/Users/TuUsuario/Documents/vr-notebook</code>
+                </div>
+
+                <div class="modal-actions d-flex justify-content-center gap-3">
+                    <button class="glass-btn outline" id="cancelSaveNotebookBtn" data-bs-dismiss="modal" style="border-radius: 5px; padding: 12px 25px; font-size: 1.05rem; font-weight: 600;">Cancelar</button>
+                    <button class="glass-btn" id="confirmSaveNotebookBtn" style="border-radius: 5px; padding: 12px 25px; font-size: 1.05rem; font-weight: 600;">Seleccionar Carpeta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-notification hidden glass-panel" id="backupWarningModal">
+        <button id="closeBackupWarningBtn" class="toast-close-btn" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+        <div class="toast-content">
+            <h4><i class="ph-fill ph-info"></i> Aviso del Sistema</h4>
+            <p>
+                Has comenzado a editar tu libreta. Tu progreso se está guardando correctamente en el navegador temporal. Para proteger tu información contra pérdidas imprevistas, te recomendamos configurar una carpeta de destino utilizando el botón "Guardar" en el panel izquierdo.
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
