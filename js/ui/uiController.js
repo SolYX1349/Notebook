@@ -1,3 +1,6 @@
+import { ExportUtils } from '../utils/exportUtils.js';
+import { CodeHighlighter } from '../utils/codeHighlighter.js';
+
 export class UIController {
     constructor(notebookManager, managers) {
         this.nbManager = notebookManager;
@@ -403,6 +406,10 @@ export class UIController {
                     this.lineWidthSlider.value = toolDefaults[toolName];
                     this.managers.left.canvas.setLineWidth(toolDefaults[toolName]);
                     this.managers.right.canvas.setLineWidth(toolDefaults[toolName]);
+                    const lineWidthVal = document.getElementById('lineWidthValue');
+                    if (lineWidthVal) {
+                        lineWidthVal.textContent = `${toolDefaults[toolName]}px`;
+                    }
                 }
 
                 if (this.colorPicker) {
@@ -580,6 +587,110 @@ export class UIController {
         formatBtn('formatSubBtn', 'formatBlock', 'H2');
         formatBtn('formatNormalBtn', 'formatBlock', 'P');
 
+        formatBtn('formatBoldBtn', 'bold');
+        formatBtn('formatItalicBtn', 'italic');
+        formatBtn('formatUnderlineBtn', 'underline');
+
+        const formatCodeBtn = document.getElementById('formatCodeBtn');
+        if (formatCodeBtn) {
+            formatCodeBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+            });
+
+            formatCodeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                this.pageTextareaLeft.classList.add('active');
+                this.pageTextareaRight.classList.add('active');
+
+                const textToolBtn = document.querySelector('.tool-btn[data-tool="text"]');
+                if (textToolBtn && !textToolBtn.classList.contains('active')) {
+                    this.toolBtns.forEach(b => b.classList.remove('active'));
+                    textToolBtn.classList.add('active');
+                    this.managers.left.canvas.setTool('text');
+                    this.managers.right.canvas.setTool('text');
+                }
+
+                const sel = window.getSelection();
+                let range = null;
+
+                if (sel && sel.rangeCount > 0 && !sel.getRangeAt(0).collapsed) {
+                    const candidateRange = sel.getRangeAt(0);
+                    const container = candidateRange.commonAncestorContainer;
+                    if ((this.pageTextareaRight && this.pageTextareaRight.contains(container)) ||
+                        (this.pageTextareaLeft && this.pageTextareaLeft.contains(container))) {
+                        range = candidateRange;
+                    }
+                }
+
+                if (!range && this.savedTextRange && !this.savedTextRange.collapsed) {
+                    const container = this.savedTextRange.commonAncestorContainer;
+                    if ((this.pageTextareaRight && this.pageTextareaRight.contains(container)) ||
+                        (this.pageTextareaLeft && this.pageTextareaLeft.contains(container))) {
+                        range = this.savedTextRange;
+                    }
+                }
+
+                if (!range) return;
+
+                const selectedText = range.toString();
+                if (!selectedText || selectedText.trim().length === 0) return;
+
+                sel.removeAllRanges();
+                sel.addRange(range);
+
+                const highlightedHtml = CodeHighlighter.formatSelectionInline(selectedText, 'auto');
+                const htmlToInsert = `${highlightedHtml}&#8203;`;
+
+                let inserted = false;
+                try {
+                    inserted = document.execCommand('insertHTML', false, htmlToInsert);
+                } catch (err) {
+                    inserted = false;
+                }
+
+                if (!inserted) {
+                    range.deleteContents();
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlToInsert;
+                    const frag = document.createDocumentFragment();
+                    let node;
+                    let lastNode;
+                    while ((node = tempDiv.firstChild)) {
+                        lastNode = node;
+                        frag.appendChild(node);
+                    }
+                    range.insertNode(frag);
+                    if (lastNode) {
+                        range.setStartAfter(lastNode);
+                        range.setEndAfter(lastNode);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                }
+
+                if (this.nbManager.activeNotebookId) {
+                    const nb = this.nbManager.getActiveNotebook();
+                    if (nb) {
+                        const leftIndex = this.isTwoPageView ? Math.floor(nb.activePageIndex / 2) * 2 : nb.activePageIndex;
+                        const rightIndex = this.isTwoPageView ? leftIndex + 1 : leftIndex;
+                        this.nbManager.updatePageText(nb.id, this.pageTextareaLeft.innerHTML, leftIndex);
+                        if (this.isTwoPageView) {
+                            this.nbManager.updatePageText(nb.id, this.pageTextareaRight.innerHTML, rightIndex);
+                        }
+                    }
+                }
+
+                this.savedTextRange = null;
+
+                if (this.isTwoPageView && document.activeElement === this.pageTextareaLeft) {
+                    this.pageTextareaLeft.focus();
+                } else {
+                    this.pageTextareaRight.focus();
+                }
+            });
+        }
+
         formatBtn('justifyLeftBtn', 'justifyLeft');
         formatBtn('justifyCenterBtn', 'justifyCenter');
         formatBtn('justifyRightBtn', 'justifyRight');
@@ -634,6 +745,25 @@ export class UIController {
                 }
             }
         });
+
+        const undoBtn = document.getElementById('undoBtn');
+        if (undoBtn) {
+            undoBtn.addEventListener('click', () => {
+                this.managers.right.canvas.undo();
+                if (this.isTwoPageView) this.managers.left.canvas.undo();
+            });
+        }
+
+        const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+        if (clearCanvasBtn) {
+            clearCanvasBtn.addEventListener('click', () => {
+                const confirmed = window.confirm('¿Deseas limpiar todos los trazos de esta página?');
+                if (confirmed) {
+                    this.managers.right.canvas.clearCanvas();
+                    if (this.isTwoPageView) this.managers.left.canvas.clearCanvas();
+                }
+            });
+        }
 
         this.managers.left.canvas.getCanvasElement().addEventListener('drawingChanged', (e) => {
             if (!this.nbManager.activeNotebookId) return;
@@ -725,10 +855,67 @@ export class UIController {
         }
 
         if (this.lineWidthSlider) {
+            const lineWidthVal = document.getElementById('lineWidthValue');
+            if (lineWidthVal) {
+                lineWidthVal.textContent = `${this.lineWidthSlider.value}px`;
+            }
             this.lineWidthSlider.addEventListener('input', (e) => {
                 const width = parseInt(e.target.value);
                 this.managers.left.canvas.setLineWidth(width);
                 this.managers.right.canvas.setLineWidth(width);
+                if (lineWidthVal) {
+                    lineWidthVal.textContent = `${width}px`;
+                }
+            });
+        }
+
+        const colorPresets = document.querySelectorAll('.color-preset-btn');
+        colorPresets.forEach(presetBtn => {
+            presetBtn.addEventListener('click', (e) => {
+                const color = e.currentTarget.dataset.color;
+                if (this.colorPicker) {
+                    this.colorPicker.value = color;
+                    this.colorPicker.dispatchEvent(new Event('input', { bubbles: true }));
+                    this.colorPicker.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+        });
+
+        const toggleToolbarBtn = document.getElementById('toggleToolbarBtn');
+        const secondaryToolbar = document.getElementById('secondaryToolbar');
+        if (toggleToolbarBtn && secondaryToolbar) {
+            const isCollapsed = localStorage.getItem('toolbar_secondary_collapsed') === 'true';
+            if (isCollapsed) {
+                secondaryToolbar.classList.add('collapsed');
+                toggleToolbarBtn.classList.remove('active');
+                toggleToolbarBtn.setAttribute('title', 'Desplegar barra secundaria');
+                toggleToolbarBtn.setAttribute('aria-expanded', 'false');
+            } else {
+                secondaryToolbar.classList.remove('collapsed');
+                toggleToolbarBtn.classList.add('active');
+                toggleToolbarBtn.setAttribute('title', 'Plegar barra secundaria');
+                toggleToolbarBtn.setAttribute('aria-expanded', 'true');
+            }
+
+            toggleToolbarBtn.addEventListener('click', () => {
+                const collapsed = secondaryToolbar.classList.toggle('collapsed');
+                toggleToolbarBtn.classList.toggle('active', !collapsed);
+                toggleToolbarBtn.setAttribute('title', collapsed ? 'Desplegar barra secundaria' : 'Plegar barra secundaria');
+                toggleToolbarBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                localStorage.setItem('toolbar_secondary_collapsed', collapsed ? 'true' : 'false');
+            });
+        }
+
+        const exportPageBtn = document.getElementById('exportPageBtn');
+        if (exportPageBtn) {
+            exportPageBtn.addEventListener('click', () => {
+                const activeCanvas = this.managers.right.canvas.getCanvasElement();
+                if (activeCanvas) {
+                    const nb = this.nbManager.getActiveNotebook();
+                    const pageNum = nb ? nb.activePageIndex + 1 : 1;
+                    const safeName = (nb ? nb.name : 'Libreta').replace(/[^a-zA-Z0-9_\-]/g, '_');
+                    ExportUtils.exportCanvasToImage(activeCanvas, `${safeName}_pagina_${pageNum}.png`);
+                }
             });
         }
 

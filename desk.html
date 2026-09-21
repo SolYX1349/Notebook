@@ -101,121 +101,191 @@
             </section>
 
             <section class="open-view hidden w-100 h-100" id="openView">
-                <header class="toolbar glass-panel w-100 d-flex align-items-center justify-content-between px-2 px-md-3 py-1" id="mainToolbar">
-                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                        <button id="mobileMenuOpenBtn" class="mobile-nav-toggle btn btn-sm d-lg-none p-1" title="Mis Libretas">
-                            <i class="ph-bold ph-list fs-5"></i>
-                        </button>
-                        <button class="btn-close-notebook" id="closeNotebookBtn" title="Cerrar libreta y volver a portadas">
-                            <i class="ph-bold ph-arrow-left"></i>
-                            <span class="d-none d-sm-inline ms-1">Cerrar</span>
-                        </button>
-                        <span class="active-notebook-badge d-none d-md-inline-block text-truncate" id="activeNotebookBadge" style="max-width: 140px;">Libreta</span>
+                <header class="toolbar glass-panel w-100 d-flex flex-column p-0" id="mainToolbar">
+                    <!-- BARRA 1 (PRINCIPAL) -->
+                    <div class="toolbar-row toolbar-row-primary w-100 d-flex align-items-center justify-content-between px-2 px-md-3 py-1">
+                        <!-- Navegación y estado -->
+                        <div class="toolbar-section-left d-flex align-items-center gap-2 flex-shrink-0">
+                            <button id="mobileMenuOpenBtn" class="mobile-nav-toggle btn btn-sm d-lg-none p-1" title="Mis Libretas">
+                                <i class="ph-bold ph-list fs-5"></i>
+                            </button>
+                            <button class="btn-close-notebook" id="closeNotebookBtn" title="Cerrar libreta y volver a portadas">
+                                <i class="ph-bold ph-arrow-left"></i>
+                                <span class="d-none d-sm-inline ms-1">Cerrar</span>
+                            </button>
+                            <span class="active-notebook-badge d-none d-md-inline-block text-truncate" id="activeNotebookBadge" style="max-width: 140px;">Libreta</span>
+                        </div>
+
+                        <!-- Herramientas Principales de Dibujo, Texto y Lienzo -->
+                        <div class="toolbar-tools-scrollable d-flex align-items-center gap-2 px-1">
+                            <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Herramientas Principales">
+                                <button class="tool-btn active btn" data-tool="text" title="Texto">
+                                    <i class="ph-fill ph-text-t"></i>
+                                    <span class="tool-label">Texto</span>
+                                </button>
+                                <button class="tool-btn btn" data-tool="pen" title="Plumón">
+                                    <i class="ph-fill ph-marker-circle"></i>
+                                    <span class="tool-label">Plumón</span>
+                                </button>
+                                <button class="tool-btn btn" data-tool="pencil" title="Lápiz Fino">
+                                    <i class="ph-fill ph-pencil-simple"></i>
+                                    <span class="tool-label">Lápiz</span>
+                                </button>
+                                <button class="tool-btn btn" data-tool="crayon" title="Crayón / Marcador">
+                                    <i class="ph-fill ph-paint-brush"></i>
+                                    <span class="tool-label">Crayón</span>
+                                </button>
+                                <button class="tool-btn btn" data-tool="eraser" title="Borrador">
+                                    <i class="ph-fill ph-eraser"></i>
+                                    <span class="tool-label">Borrador</span>
+                                </button>
+                                <button class="tool-btn btn" data-tool="select" title="Seleccionar">
+                                    <i class="ph ph-cursor"></i>
+                                    <span class="tool-label">Seleccionar</span>
+                                </button>
+                            </div>
+
+                            <div class="toolbar-divider vr opacity-25"></div>
+
+                            <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Acciones de Lienzo">
+                                <button class="tool-btn action-btn btn" id="undoBtn" title="Deshacer trazo (Ctrl+Z)">
+                                    <i class="ph-bold ph-arrow-u-up-left"></i>
+                                    <span class="tool-label">Deshacer</span>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="clearCanvasBtn" title="Borrar dibujo de la hoja">
+                                    <i class="ph-bold ph-trash"></i>
+                                    <span class="tool-label">Limpiar</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Paginación y Botón Plegar/Desplegar Barra 2 -->
+                        <div class="toolbar-section-right d-flex align-items-center gap-2 flex-shrink-0">
+                            <div class="tools-group pagination-tools d-flex align-items-center gap-1 flex-shrink-0">
+                                <button class="tool-btn btn btn-sm" id="prevPageBtn" title="Página Anterior">
+                                    <i class="ph ph-caret-left"></i>
+                                </button>
+                                <span id="pageIndicator" class="px-1 fw-medium"
+                                    style="font-family: 'Outfit'; font-size: 0.85rem; min-width: 36px; text-align: center; color: var(--text-primary);">1/1</span>
+                                <button class="tool-btn btn btn-sm" id="nextPageBtn" title="Página Siguiente">
+                                    <i class="ph ph-caret-right"></i>
+                                </button>
+                                <button class="tool-btn btn btn-sm" id="addPageBtn" title="Añadir Página">
+                                    <i class="ph ph-plus"></i>
+                                </button>
+                                <button class="tool-btn btn btn-sm" id="deletePageBtn" title="Eliminar Página">
+                                    <i class="ph ph-minus"></i>
+                                </button>
+                            </div>
+
+                            <div class="toolbar-divider vr opacity-25 d-none d-sm-block"></div>
+
+                            <!-- Botón Plegar / Desplegar Barra 2 -->
+                            <button class="tool-btn toggle-toolbar-btn btn active" id="toggleToolbarBtn" title="Plegar barra secundaria" aria-expanded="true">
+                                <i class="ph-bold ph-caret-up toggle-toolbar-icon"></i>
+                                <span class="tool-label">Plegar</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="toolbar-tools-scrollable d-flex align-items-center gap-2 px-1">
-                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Herramientas Principales">
-                            <button class="tool-btn active btn" data-tool="text" title="Texto">
-                                <i class="ph-fill ph-text-t"></i>
-                                <span class="tool-label">Texto</span>
-                            </button>
-                            <button class="tool-btn btn" data-tool="pen" title="Plumón">
-                                <i class="ph-fill ph-marker-circle"></i>
-                            </button>
-                            <button class="tool-btn btn" data-tool="eraser" title="Borrador">
-                                <i class="ph-fill ph-eraser"></i>
-                            </button>
-                            <button class="tool-btn btn" data-tool="select" title="Seleccionar">
-                                <i class="ph ph-cursor"></i>
-                            </button>
+                    <!-- BARRA 2 (SECUNDARIA - FORMATO, ESTILO Y PROPIEDADES - PLEGABLE) -->
+                    <div class="toolbar-row toolbar-row-secondary w-100 d-flex align-items-center justify-content-between px-2 px-md-3 py-1" id="secondaryToolbar">
+                        <div class="toolbar-tools-scrollable d-flex align-items-center gap-2 px-1">
+                            <!-- Formato de Texto -->
+                            <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Formato de Texto">
+                                <button class="tool-btn action-btn btn" id="formatTitleBtn" title="Título (H1)">
+                                    <i class="ph-bold ph-text-h-one"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="formatSubBtn" title="Subtítulo (H2)">
+                                    <i class="ph-bold ph-text-h-two"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="formatNormalBtn" title="Texto Normal">
+                                    <i class="ph-bold ph-text-t"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="formatBoldBtn" title="Negrita (Ctrl+B)">
+                                    <i class="ph-bold ph-text-b"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="formatItalicBtn" title="Cursiva (Ctrl+I)">
+                                    <i class="ph-bold ph-text-italic"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="formatUnderlineBtn" title="Subrayado (Ctrl+U)">
+                                    <i class="ph-bold ph-text-underline"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="formatCodeBtn" title="Colorear Código (Java, SQL, HTML)">
+                                    <i class="ph-bold ph-code"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="toggleHandwritingBtn" title="Fuente Manuscrita">
+                                    <i class="ph-bold ph-signature"></i>
+                                </button>
+                            </div>
+
+                            <div class="toolbar-divider vr opacity-25"></div>
+
+                            <!-- Alineación y Listas -->
+                            <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Alineación y Listas">
+                                <button class="tool-btn action-btn btn" id="justifyLeftBtn" title="Alinear a la izquierda">
+                                    <i class="ph-bold ph-text-align-left"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="justifyCenterBtn" title="Centrar">
+                                    <i class="ph-bold ph-text-align-center"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="justifyRightBtn" title="Alinear a la derecha">
+                                    <i class="ph-bold ph-text-align-right"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="justifyFullBtn" title="Justificar">
+                                    <i class="ph-bold ph-text-align-justify"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="listBulletedBtn" title="Viñetas">
+                                    <i class="ph-bold ph-list-bullets"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="listNumberedBtn" title="Lista numerada">
+                                    <i class="ph-bold ph-list-numbers"></i>
+                                </button>
+                            </div>
+
+                            <div class="toolbar-divider vr opacity-25"></div>
+
+                            <!-- Inserciones y Vistas -->
+                            <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Inserciones y Vistas">
+                                <input type="file" id="insertImageInput" accept="image/*" class="hidden">
+                                <button class="tool-btn action-btn btn" id="insertImageBtn" title="Insertar Imagen">
+                                    <i class="ph-fill ph-image-square"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="addStickyNoteBtn" title="Añadir Nota Adhesiva">
+                                    <i class="ph-fill ph-note"></i>
+                                </button>
+                                <button class="tool-btn btn d-none d-md-inline-flex" id="toggleViewModeBtn" title="Vista de 2 Páginas">
+                                    <i class="ph ph-book-open"></i>
+                                </button>
+                                <button class="tool-btn btn" id="rotatePageBtn" title="Rotar Libreta (Horizontal)">
+                                    <i class="ph ph-arrows-clockwise"></i>
+                                </button>
+                                <button class="tool-btn action-btn btn" id="exportPageBtn" title="Exportar Página como Imagen">
+                                    <i class="ph-bold ph-download-simple"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="toolbar-divider vr opacity-25"></div>
+                        <!-- Propiedades de Trazo y Color -->
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                            <div class="tools-group size-tools d-none d-sm-flex align-items-center gap-1 flex-shrink-0">
+                                <i class="ph ph-line-segments" title="Grosor de línea" style="color: var(--text-primary); font-size: 1.1rem;"></i>
+                                <input type="range" id="lineWidthSlider" min="1" max="50" value="6" class="line-width-slider form-range" title="Grosor de la línea" style="width: 65px; accent-color: var(--primary-color);">
+                                <span id="lineWidthValue" class="line-width-indicator fw-semibold" style="font-size: 0.75rem; min-width: 28px; color: var(--text-secondary);">6px</span>
+                            </div>
 
-                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Formato de Texto">
-                            <button class="tool-btn action-btn btn" id="formatTitleBtn" title="Título (H1)">
-                                <i class="ph-bold ph-text-h-one"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="formatSubBtn" title="Subtítulo (H2)">
-                                <i class="ph-bold ph-text-h-two"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="formatNormalBtn" title="Texto Normal">
-                                <i class="ph-bold ph-text-t"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="toggleHandwritingBtn" title="Fuente Manuscrita">
-                                <i class="ph-bold ph-signature"></i>
-                            </button>
-                        </div>
+                            <div class="toolbar-divider vr opacity-25 d-none d-sm-block"></div>
 
-                        <div class="toolbar-divider vr opacity-25"></div>
-
-                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Alineación y Listas">
-                            <button class="tool-btn action-btn btn" id="justifyLeftBtn" title="Alinear a la izquierda">
-                                <i class="ph-bold ph-text-align-left"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="justifyCenterBtn" title="Centrar">
-                                <i class="ph-bold ph-text-align-center"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="justifyRightBtn" title="Alinear a la derecha">
-                                <i class="ph-bold ph-text-align-right"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="justifyFullBtn" title="Justificar">
-                                <i class="ph-bold ph-text-align-justify"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="listBulletedBtn" title="Viñetas">
-                                <i class="ph-bold ph-list-bullets"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="listNumberedBtn" title="Lista numerada">
-                                <i class="ph-bold ph-list-numbers"></i>
-                            </button>
-                        </div>
-
-                        <div class="toolbar-divider vr opacity-25"></div>
-
-                        <div class="tools-group btn-group btn-group-sm flex-shrink-0" role="group" aria-label="Inserciones">
-                            <input type="file" id="insertImageInput" accept="image/*" class="hidden">
-                            <button class="tool-btn action-btn btn" id="insertImageBtn" title="Insertar Imagen">
-                                <i class="ph-fill ph-image-square"></i>
-                            </button>
-                            <button class="tool-btn action-btn btn" id="addStickyNoteBtn" title="Añadir Nota Adhesiva">
-                                <i class="ph-fill ph-note"></i>
-                            </button>
-                            <button class="tool-btn btn d-none d-md-inline-flex" id="toggleViewModeBtn" title="Vista de 2 Páginas">
-                                <i class="ph ph-book-open"></i>
-                            </button>
-                            <button class="tool-btn btn" id="rotatePageBtn" title="Rotar Libreta (Horizontal)">
-                                <i class="ph ph-arrows-clockwise"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                        <div class="tools-group pagination-tools d-flex align-items-center gap-1 flex-shrink-0">
-                            <button class="tool-btn btn btn-sm" id="prevPageBtn" title="Página Anterior">
-                                <i class="ph ph-caret-left"></i>
-                            </button>
-                            <span id="pageIndicator" class="px-1 fw-medium"
-                                style="font-family: 'Outfit'; font-size: 0.85rem; min-width: 36px; text-align: center; color: var(--text-primary);">1/1</span>
-                            <button class="tool-btn btn btn-sm" id="nextPageBtn" title="Página Siguiente">
-                                <i class="ph ph-caret-right"></i>
-                            </button>
-                            <button class="tool-btn btn btn-sm" id="addPageBtn" title="Añadir Página">
-                                <i class="ph ph-plus"></i>
-                            </button>
-                            <button class="tool-btn btn btn-sm" id="deletePageBtn" title="Eliminar Página">
-                                <i class="ph ph-minus"></i>
-                            </button>
-                        </div>
-
-                        <div class="toolbar-divider vr opacity-25 d-none d-sm-block"></div>
-
-                        <div class="tools-group size-tools d-none d-md-flex align-items-center gap-1 flex-shrink-0">
-                            <i class="ph ph-line-segments" title="Grosor de línea" style="color: var(--text-primary); font-size: 1.1rem;"></i>
-                            <input type="range" id="lineWidthSlider" min="1" max="50" value="6" class="line-width-slider form-range" title="Grosor de la línea" style="width: 65px; accent-color: var(--primary-color);">
-                        </div>
-
-                        <div class="tools-group color-tools d-flex align-items-center flex-shrink-0">
-                            <input type="color" id="colorPicker" value="#222222" title="Color" class="color-picker-input form-control-color">
+                            <div class="tools-group color-tools d-flex align-items-center gap-1 flex-shrink-0">
+                                <div class="color-presets d-flex align-items-center gap-1">
+                                    <button type="button" class="color-preset-btn" data-color="#1e293b" title="Negro / Tinta" style="background-color: #1e293b;"></button>
+                                    <button type="button" class="color-preset-btn" data-color="#3b82f6" title="Azul" style="background-color: #3b82f6;"></button>
+                                    <button type="button" class="color-preset-btn" data-color="#ef4444" title="Rojo" style="background-color: #ef4444;"></button>
+                                    <button type="button" class="color-preset-btn" data-color="#10b981" title="Verde" style="background-color: #10b981;"></button>
+                                    <button type="button" class="color-preset-btn" data-color="#eab308" title="Resaltador Amarillo" style="background-color: #eab308;"></button>
+                                </div>
+                                <input type="color" id="colorPicker" value="#222222" title="Color personalizado" class="color-picker-input form-control-color ms-1">
+                            </div>
                         </div>
                     </div>
                 </header>
